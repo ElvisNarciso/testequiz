@@ -201,6 +201,12 @@ io.on('connection', (socket) => {
     cb({ open: true, phase: room.phase, hasPlayer });
   });
 
+  socket.on('host:auth', ({ password } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    if (password !== ADMIN_PASSWORD) return cb({ error: 'Senha incorreta' });
+    cb({ ok: true });
+  });
+
   socket.on('host:create', async ({ password, questions, base }, cb) => {
     try {
       if (password !== ADMIN_PASSWORD) return cb({ error: 'Senha incorreta' });

@@ -10,11 +10,24 @@
 </head>
 <body>
 
-<section class="screen on" id="h-setup">
+<section class="screen on" id="h-login">
+  <h1 class="logo"><span>Quiz</span> <span>ao</span> <span>Vi</span><span>vo</span> <small style="font-size:1rem">admin</small></h1>
+  <div class="card">
+    <p class="hello">🔒 Acesso restrito do host</p>
+    <form id="loginForm">
+      <input id="pass" type="password" placeholder="Senha de admin" autocomplete="current-password">
+      <div style="height:12px"></div>
+      <div class="err" id="loginErr"></div>
+      <button type="submit" class="btn go big" id="loginBtn">Entrar ➜</button>
+    </form>
+    <div style="height:12px"></div>
+    <a href="./" class="btn ghost small" style="text-decoration:none;display:inline-block">← Voltar para jogador</a>
+  </div>
+</section>
+
+<section class="screen" id="h-setup">
   <h1 class="logo"><span>Quiz</span> <span>ao</span> <span>Vi</span><span>vo</span> <small style="font-size:1rem">host</small></h1>
   <div class="card wide">
-    <input id="pass" type="password" placeholder="Senha de admin">
-    <div style="height:12px"></div>
     <details class="ai-box" id="aiBox">
       <summary>🤖 Gerar perguntas com IA (copiar prompt)</summary>
       <p class="muted" style="margin:8px 0">Copie o prompt, cole no ChatGPT/Gemini e troque <b>[TEMA]</b> pelo assunto (ou preencha o tema aqui). Depois copie a resposta da IA e cole na caixa de perguntas abaixo.</p>
@@ -31,7 +44,10 @@
     </div>
     <div class="err" id="setupErr" style="margin-top:10px"></div>
     <div style="height:12px"></div>
-    <button class="btn go big" id="create">Criar sala</button>
+    <div class="row">
+      <button class="btn go big" id="create">Criar sala</button>
+      <button class="btn ghost small" id="logoutAdmin">🔒 Sair</button>
+    </div>
   </div>
 </section>
 

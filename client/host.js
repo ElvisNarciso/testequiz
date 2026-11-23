@@ -1,12 +1,14 @@
 const socket = io(window.SERVER_URL || undefined, { transports: ['websocket', 'polling'] });
 const HK = 'quiz_host';
+const AK = 'quiz_admin_pass';
 // Base para o link de entrada dos jogadores (a página index.html do mesmo site)
 const BASE = location.origin + location.pathname.replace(/host(\.html)?$/, '');
 let hs = JSON.parse(localStorage.getItem(HK) || 'null');
+let adminPass = sessionStorage.getItem(AK) || '';
+localStorage.removeItem('quiz_pass');
 let last = { phase: null, qi: -1 };
 let current = null;
 
-$('#pass').value = localStorage.getItem('quiz_pass') || '';
 $('#questions').value = localStorage.getItem('quiz_questions') || '';
 $('#joinHost').textContent = location.host + location.pathname.replace(/host(\.html)?$/, '');
 
@@ -31,17 +33,65 @@ const download = (name, text, type = 'text/plain') => {
 };
 const loadMini = async () => { $('#questions').value = await (await fetch('quizzes/mini-quiz.txt')).text(); };
 $('#miniQuiz').onclick = loadMini;
-if (!$('#questions').value) loadMini();
 $('#tplJson').onclick = () => { $('#questions').value = TPL_JSON; };
 $('#tplTxt').onclick = () => { $('#questions').value = TPL_TXT; };
 $('#file').onchange = async (e) => { const f = e.target.files[0]; if (f) $('#questions').value = await f.text(); };
 
+function enterSetup() {
+  if (!$('#questions').value) loadMini();
+  showScreen('h-setup');
+}
+
+function tryAuth(password, silent = false) {
+  socket.emit('host:auth', { password }, (res) => {
+    const e = $('#loginErr');
+    if (res && res.ok) {
+      adminPass = password;
+      sessionStorage.setItem(AK, password);
+      e.classList.remove('on');
+      enterSetup();
+    } else {
+      adminPass = '';
+      sessionStorage.removeItem(AK);
+      if (!silent) {
+        e.textContent = (res && res.error) || 'Senha incorreta';
+        e.classList.add('on');
+      }
+      showScreen('h-login');
+    }
+  });
+}
+
+$('#loginForm').onsubmit = (ev) => {
+  ev.preventDefault();
+  $('#loginErr').classList.remove('on');
+  tryAuth($('#pass').value, false);
+};
+
+$('#logoutAdmin').onclick = () => {
+  adminPass = '';
+  sessionStorage.removeItem(AK);
+  $('#pass').value = '';
+  $('#loginErr').classList.remove('on');
+  showScreen('h-login');
+};
+
 $('#create').onclick = () => {
-  const password = $('#pass').value, questions = $('#questions').value;
-  localStorage.setItem('quiz_pass', password); localStorage.setItem('quiz_questions', questions);
-  socket.emit('host:create', { password, questions, base: BASE }, (res) => {
+  const questions = $('#questions').value;
+  localStorage.setItem('quiz_questions', questions);
+  socket.emit('host:create', { password: adminPass, questions, base: BASE }, (res) => {
     const e = $('#setupErr');
-    if (res.error) { e.textContent = res.error; e.classList.add('on'); return; }
+    if (res.error) {
+      if (res.error === 'Senha incorreta') {
+        sessionStorage.removeItem(AK);
+        adminPass = '';
+        showScreen('h-login');
+        $('#loginErr').textContent = 'Sessão expirada. Digite a senha novamente.';
+        $('#loginErr').classList.add('on');
+        return;
+      }
+      e.textContent = res.error; e.classList.add('on'); return;
+    }
     e.classList.remove('on');
     hs = { pin: res.pin, hostToken: res.hostToken };
     localStorage.setItem(HK, JSON.stringify(hs));
@@ -52,8 +102,12 @@ function setRoom(res) { $('#pin').textContent = res.pin; $('#qr').src = res.qr; 
 
 socket.on('connect', () => {
   if (hs) socket.emit('host:resume', { ...hs, base: BASE }, (res) => {
-    if (res.error) { localStorage.removeItem(HK); hs = null; showScreen('h-setup'); } else setRoom(res);
+    if (res.error) {
+      localStorage.removeItem(HK); hs = null;
+      if (adminPass) tryAuth(adminPass, true); else showScreen('h-login');
+    } else setRoom(res);
   });
+  else if (adminPass) tryAuth(adminPass, true);
 });
 
 $('#start').onclick = () => socket.emit('host:start');
