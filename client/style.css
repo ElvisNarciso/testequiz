@@ -181,7 +181,8 @@ body {
 
 /* créditos */
 .credit { font-weight: 600; letter-spacing: .02em; }
-.credit b { font-weight: 700; background: linear-gradient(90deg, #ffe680, #ff8fd0, #8fe6ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.credit a { font-weight: 700; text-decoration: none; cursor: pointer; pointer-events: auto; background: linear-gradient(90deg, #ffe680, #ff8fd0, #8fe6ff); -webkit-background-clip: text; background-clip: text; color: transparent; border-bottom: 1px dashed rgba(255,230,128,.5); transition: filter .2s, border-color .2s; }
+.credit a:hover { filter: brightness(1.2); border-bottom-color: #ffe680; }
 .credit.fixed { position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%); z-index: 4; font-size: 1rem; background: rgba(0,0,0,.45); backdrop-filter: blur(6px); padding: 6px 18px; border-radius: 99px; border: 1px solid rgba(255,255,255,.25); white-space: nowrap; pointer-events: none; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
 .credit.big { font-size: clamp(1.4rem, 4vw, 2.2rem); margin-top: 14px; padding: 10px 28px; border-radius: 99px; background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.3); animation: bob 3s ease-in-out infinite; }
 body:has(#h-lobby.on) .credit.fixed, body:has(#s-lobby.on) .credit.fixed, body:has(#w-lobby.on) .credit.fixed { display: none; }

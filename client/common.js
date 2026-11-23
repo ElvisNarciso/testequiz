@@ -1,4 +1,4 @@
-﻿// Utilidades compartilhadas
+// Utilidades compartilhadas
 const $ = (s, r = document) => r.querySelector(s);
 const SHAPES = [
   '<svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2l3 6.9 7.5.7-5.7 5 1.7 7.4L12 18l-6.5 4 1.7-7.4-5.7-5 7.5-.7z"/></svg>', // estrela
