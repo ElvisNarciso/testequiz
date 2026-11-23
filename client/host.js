@@ -79,7 +79,9 @@ $('#logoutAdmin').onclick = () => {
 $('#create').onclick = () => {
   const questions = $('#questions').value;
   localStorage.setItem('quiz_questions', questions);
-  socket.emit('host:create', { password: adminPass, questions, base: BASE }, (res) => {
+  const timeOverride = +$('#timeOverride').value || 0;
+  const shuffle = $('#shuffleOpts').checked;
+  socket.emit('host:create', { password: adminPass, questions, base: BASE, timeOverride, shuffle }, (res) => {
     const e = $('#setupErr');
     if (res.error) {
       if (res.error === 'Senha incorreta') {
@@ -120,6 +122,13 @@ const closeAndReload = () => {
   else location.reload();
 };
 $('#newGame').onclick = closeAndReload;
+const askRestart = () => {
+  if (confirm('Reiniciar o quiz do zero? Os jogadores continuam na sala e a pontuação volta para 0.')) {
+    socket.emit('host:restart');
+  }
+};
+document.querySelectorAll('.restart-btn').forEach((b) => (b.onclick = askRestart));
+$('#restartEnd').onclick = askRestart;
 $('#csv').onclick = () => {
   const rows = ['posicao;nome;pontos', ...current.players.map((p) => `${p.rank};${p.name};${p.score}`)];
   download('resultado.csv', rows.join('\n'), 'text/csv');
@@ -129,6 +138,7 @@ socket.on('progress', (p) => { $('#hAnswered').textContent = p.answered; });
 
 socket.on('state', (s) => {
   syncClock(s.now); current = s;
+  if (s.phase !== 'ended') stopCelebrate();
   const connected = s.players.filter((p) => p.connected).length;
   switch (s.phase) {
     case 'lobby':
@@ -254,7 +264,9 @@ function renderPreview() {
   const errEl = $('#setupErr');
   const box = $('#previewBox');
   try {
-    const list = parseQuestionsClient($('#questions').value);
+    let list = parseQuestionsClient($('#questions').value);
+    const tOv = +$('#timeOverride').value || 0;
+    if (tOv >= 5 && tOv <= 120) list = list.map((q) => ({ ...q, time: tOv }));
     localStorage.setItem('quiz_questions', $('#questions').value);
     errEl.classList.remove('on');
     const tfCount = list.filter((q) => q.options.length === 2).length;
@@ -279,6 +291,7 @@ function renderPreview() {
   }
 }
 $('#previewBtn').onclick = renderPreview;
+$('#timeOverride').onchange = () => { if ($('#previewBox').style.display !== 'none') renderPreview(); };
 
 // ---- prompt para IA ----
 function buildPrompt() {

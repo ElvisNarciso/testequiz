@@ -97,9 +97,15 @@ socket.on('kicked', () => unlinkToJoin('Você foi removido da sala.', true));
 
 socket.on('state', (s) => {
   syncClock(s.now);
+  if (s.phase !== 'ended') stopCelebrate();
   const me = s.me;
   switch (s.phase) {
     case 'lobby':
+      lastQ = -1;
+      if (!saved) {
+        saved = { pin: s.pin, name: me.name, token: me.id, avatar: me.avatar };
+        localStorage.setItem(KEY, JSON.stringify(saved));
+      }
       $('#lobbyAv').innerHTML = avatarSVG(me.avatar, 180);
       $('#lobbyName').textContent = me.name;
       $('#lobbyCount').textContent = `👥 ${s.count} jogador${s.count > 1 ? 'es' : ''} na sala`;

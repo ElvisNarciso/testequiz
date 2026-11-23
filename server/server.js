@@ -101,6 +101,16 @@ function parseQuestions(raw) {
   return list.map(normalizeQuestion);
 }
 
+function shuffleQuestionOptions(q) {
+  if (q.options.length <= 2) return q;
+  const pairs = q.options.map((text, idx) => ({ text, ok: idx === q.correct }));
+  for (let i = pairs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+  }
+  return { ...q, options: pairs.map((p) => p.text), correct: pairs.findIndex((p) => p.ok) };
+}
+
 // ---------- sala ----------
 function newPin() {
   let pin;
@@ -247,14 +257,18 @@ io.on('connection', (socket) => {
     cb({ ok: true });
   });
 
-  socket.on('host:create', async ({ password, questions, base }, cb) => {
+  socket.on('host:create', async ({ password, questions, base, timeOverride, shuffle }, cb) => {
     try {
       if (password !== ADMIN_PASSWORD) return cb({ error: 'Senha incorreta' });
-      const qs = parseQuestions(questions);
+      let qs = parseQuestions(questions);
+      const tOv = Number(timeOverride);
+      if (Number.isFinite(tOv) && tOv >= 5 && tOv <= 120) qs = qs.map((q) => ({ ...q, time: tOv }));
+      const shuf = !!shuffle;
       const pin = newPin();
       const room = {
-        pin, hostToken: rid(), phase: 'lobby', questions: qs, qIndex: 0, players: new Map(),
-        answers: new Map(), created: Date.now(),
+        pin, hostToken: rid(), phase: 'lobby', baseQuestions: qs,
+        questions: shuf ? qs.map(shuffleQuestionOptions) : qs,
+        shuffle: shuf, qIndex: 0, players: new Map(), answers: new Map(), created: Date.now(),
       };
       rooms.set(pin, room);
       socket.join('host:' + pin);
@@ -297,6 +311,17 @@ io.on('connection', (socket) => {
     if (ctx?.role !== 'host') return;
     if (ctx.room.phase === 'question') endQuestion(ctx.room);
     else advance(ctx.room);
+  });
+  socket.on('host:restart', () => {
+    if (ctx?.role !== 'host') return;
+    const room = ctx.room;
+    clearTimeout(room.timer);
+    room.phase = 'lobby';
+    room.qIndex = 0;
+    room.answers = new Map();
+    room.players.forEach((p) => { p.score = 0; });
+    room.questions = room.shuffle ? room.baseQuestions.map(shuffleQuestionOptions) : room.baseQuestions;
+    emitRoom(room);
   });
   socket.on('host:kick', (id) => {
     if (ctx?.role !== 'host') return;
