@@ -257,6 +257,16 @@ io.on('connection', (socket) => {
     cb({ ok: true });
   });
 
+  socket.on('host:preset', ({ password, id } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    if (password !== ADMIN_PASSWORD) return cb({ error: 'Senha incorreta' });
+    const presets = { 'sne-pne': path.join(__dirname, 'quizzes', 'sne-pne.txt') };
+    const file = presets[id];
+    if (!file) return cb({ error: 'Quiz não encontrado' });
+    try { cb({ ok: true, text: require('fs').readFileSync(file, 'utf8') }); }
+    catch { cb({ error: 'Erro ao ler o quiz' }); }
+  });
+
   socket.on('host:create', async ({ password, questions, base, timeOverride, shuffle }, cb) => {
     try {
       if (password !== ADMIN_PASSWORD) return cb({ error: 'Senha incorreta' });

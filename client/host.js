@@ -33,6 +33,18 @@ const download = (name, text, type = 'text/plain') => {
 };
 const loadMini = async () => { $('#questions').value = await (await fetch('quizzes/mini-quiz.txt')).text(); renderPreview(); };
 $('#miniQuiz').onclick = loadMini;
+$('#officialQuiz').onclick = () => {
+  socket.emit('host:preset', { password: adminPass, id: 'sne-pne' }, (res) => {
+    if (res && res.ok) {
+      $('#questions').value = res.text;
+      renderPreview();
+      toast('Quiz SNE / PNE (20 perguntas) carregado!');
+    } else {
+      $('#setupErr').textContent = (res && res.error) || 'Erro ao carregar quiz';
+      $('#setupErr').classList.add('on');
+    }
+  });
+};
 $('#tplJson').onclick = () => { $('#questions').value = TPL_JSON; renderPreview(); };
 $('#tplTxt').onclick = () => { $('#questions').value = TPL_TXT; renderPreview(); };
 $('#file').onchange = async (e) => { const f = e.target.files[0]; if (f) { $('#questions').value = await f.text(); renderPreview(); } };
