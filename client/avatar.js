@@ -142,6 +142,63 @@ const CHARACTERS = [
     <path d="M66 98 Q78 92 90 98 M110 98 Q122 92 134 98" stroke="#a63f08" stroke-width="3.5" fill="none" stroke-linecap="round"/>
     <g fill="#c9703a" opacity=".7"><circle cx="70" cy="124" r="2.2"/><circle cx="78" cy="128" r="2.2"/><circle cx="86" cy="124" r="2.2"/><circle cx="114" cy="124" r="2.2"/><circle cx="122" cy="128" r="2.2"/><circle cx="130" cy="124" r="2.2"/></g>
     <path d="M100 110 Q96 122 102 124" stroke="#d99a72" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M84 138 Q100 154 116 138 Q100 144 84 138Z" fill="#d6224a"/>` },
+  { name: 'Camaleão', bg: '#d9f2a8', svg: () => `
+    <path d="M58 74 L66 36 L84 64 L100 30 L116 64 L134 36 L142 74Z" fill="#f2b705"/>
+    <ellipse cx="100" cy="118" rx="72" ry="54" fill="#7ed957"/>
+    <circle cx="150" cy="140" r="8" fill="#ff8c42"/><circle cx="48" cy="142" r="7" fill="#3a86ff"/><circle cx="132" cy="150" r="5" fill="#f2b705"/><circle cx="66" cy="152" r="5" fill="#ff4d6d"/>
+    <circle cx="60" cy="86" r="24" fill="#5bbf3a"/><circle cx="140" cy="86" r="24" fill="#5bbf3a"/>
+    <circle cx="60" cy="86" r="16" fill="#fff"/><circle cx="140" cy="86" r="16" fill="#fff"/><circle cx="54" cy="88" r="8" fill="#1c1233"/><circle cx="146" cy="84" r="8" fill="#1c1233"/><circle cx="51" cy="85" r="2.5" fill="#fff"/><circle cx="143" cy="81" r="2.5" fill="#fff"/>
+    <path d="M44 132 Q100 178 156 132" stroke="#1c1233" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="92" cy="118" r="2.5" fill="#3d8f20"/><circle cx="108" cy="118" r="2.5" fill="#3d8f20"/>` },
+  { name: 'Coruja', bg: '#f3dcc0', svg: () => `
+    <path d="M42 74 L36 18 L82 54Z M158 74 L164 18 L118 54Z" fill="#6e4426"/>
+    <ellipse cx="100" cy="112" rx="66" ry="62" fill="#8a5a36"/>
+    <path d="M82 172 Q100 188 118 172 Q100 160 82 172Z" fill="#6e4426"/><path d="M84 152 Q92 160 100 152 Q108 160 116 152" stroke="#d9b48a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="70" cy="102" r="31" fill="#f5e0b8"/><circle cx="130" cy="102" r="31" fill="#f5e0b8"/><circle cx="70" cy="102" r="20" fill="#ffc400"/><circle cx="130" cy="102" r="20" fill="#ffc400"/>
+    <circle cx="72" cy="103" r="10" fill="#1c1233"/><circle cx="128" cy="103" r="10" fill="#1c1233"/><circle cx="76" cy="98" r="3.5" fill="#fff"/><circle cx="132" cy="98" r="3.5" fill="#fff"/>
+    <path d="M54 76 L86 90 M146 76 L114 90" stroke="#4a2c14" stroke-width="7" stroke-linecap="round"/>
+    <path d="M90 112 L110 112 L100 138Z" fill="#ff9f1c"/>` },
+  { name: 'Tigre', bg: '#ffe1b0', svg: () => `
+    <circle cx="46" cy="54" r="22" fill="#f28c1c"/><circle cx="154" cy="54" r="22" fill="#f28c1c"/><circle cx="46" cy="54" r="11" fill="#2b1b12"/><circle cx="154" cy="54" r="11" fill="#2b1b12"/>
+    <ellipse cx="100" cy="112" rx="68" ry="62" fill="#f28c1c"/>
+    <path d="M100 52 L94 80 L100 72 L106 80Z M62 62 L74 86 L80 70Z M138 62 L126 86 L120 70Z M34 108 L58 112 L36 122Z M166 108 L142 112 L164 122Z M40 138 L62 134 L48 150Z M160 138 L138 134 L152 150Z" fill="#2b1b12"/>
+    <ellipse cx="100" cy="136" rx="36" ry="26" fill="#fff4e0"/>${eye(74, 102, 8, 5)}${eye(126, 102, 8, 5)}
+    <path d="M90 120 L110 120 L100 130Z" fill="#ff6b81"/><path d="M100 130 Q90 146 80 138 M100 130 Q110 146 120 138" stroke="#1c1233" stroke-width="4" fill="none" stroke-linecap="round"/>` },
+  { name: 'Elefante', bg: '#d5dce6', svg: () => `
+    <circle cx="42" cy="100" r="42" fill="#9aa5b1"/><circle cx="158" cy="100" r="42" fill="#9aa5b1"/><circle cx="44" cy="100" r="28" fill="#f2b5c4"/><circle cx="156" cy="100" r="28" fill="#f2b5c4"/>
+    <ellipse cx="100" cy="100" rx="56" ry="58" fill="#b4becb"/>
+    <path d="M78 130 Q70 176 98 186 Q108 188 110 178 Q104 160 122 130Z" fill="#a3aebb"/><path d="M82 150 L108 150 M84 164 L106 164" stroke="#8793a1" stroke-width="3" stroke-linecap="round"/>
+    <path d="M76 138 Q58 154 68 170 Q82 154 88 144Z M124 138 Q142 154 132 170 Q118 154 112 144Z" fill="#fffaf0" stroke="#e0d6bf" stroke-width="2"/>
+    ${eye(78, 94, 8, 5)}${eye(122, 94, 8, 5)}<path d="M64 80 Q78 72 90 80 M110 80 Q122 72 136 80" stroke="#8793a1" stroke-width="3.5" fill="none" stroke-linecap="round"/>` },
+  { name: 'Macaco', bg: '#f0d9b5', svg: () => `
+    <circle cx="36" cy="108" r="24" fill="#8b5a2b"/><circle cx="164" cy="108" r="24" fill="#8b5a2b"/><circle cx="36" cy="108" r="14" fill="#f1cf9e"/><circle cx="164" cy="108" r="14" fill="#f1cf9e"/>
+    <path d="M86 56 Q96 28 108 52 Q114 36 118 58Z" fill="#6e4520"/>
+    <ellipse cx="100" cy="106" rx="62" ry="58" fill="#8b5a2b"/>
+    <path d="M100 86 Q68 68 60 102 Q56 144 100 168 Q144 144 140 102 Q132 68 100 86Z" fill="#f1cf9e"/>
+    ${eye(78, 104, 8, 5)}${eye(122, 104, 8, 5)}<ellipse cx="92" cy="130" rx="3" ry="4" fill="#6e4520"/><ellipse cx="108" cy="130" rx="3" ry="4" fill="#6e4520"/>
+    <path d="M78 142 Q100 162 122 142" stroke="#6e4520" stroke-width="5" fill="none" stroke-linecap="round"/>` },
+  { name: 'Dragão', bg: '#f6c9bf', svg: () => `
+    <path d="M44 74 L26 20 L72 52Z M156 74 L174 20 L128 52Z" fill="#f4e7c8"/>
+    <path d="M70 58 L78 30 L90 54 L100 24 L110 54 L122 30 L130 58Z" fill="#ff8c42"/>
+    <ellipse cx="100" cy="114" rx="68" ry="58" fill="#d62839"/><path d="M30 104 Q18 90 34 78 Q38 96 48 100Z M170 104 Q182 90 166 78 Q162 96 152 100Z" fill="#a31a2a"/>
+    <ellipse cx="100" cy="140" rx="40" ry="28" fill="#ff8c42"/><ellipse cx="86" cy="134" rx="4.5" ry="6" fill="#7a1a10"/><ellipse cx="114" cy="134" rx="4.5" ry="6" fill="#7a1a10"/>
+    <ellipse cx="74" cy="100" rx="13" ry="10" fill="#ffd23f"/><ellipse cx="126" cy="100" rx="13" ry="10" fill="#ffd23f"/><ellipse cx="74" cy="100" rx="3.5" ry="9" fill="#1c1233"/><ellipse cx="126" cy="100" rx="3.5" ry="9" fill="#1c1233"/>
+    <path d="M52 86 L90 98 M148 86 L110 98" stroke="#7a1a10" stroke-width="7" stroke-linecap="round"/>
+    <path d="M76 152 Q100 166 124 152" stroke="#7a1a10" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M82 154 L86 164 L92 157Z M118 154 L114 164 L108 157Z" fill="#fff"/>` },
+  { name: 'Tubarão', bg: '#bfe3ff', svg: () => `
+    <path d="M86 62 Q96 6 134 54Z" fill="#4a7aa8"/>
+    <ellipse cx="100" cy="112" rx="74" ry="58" fill="#5b8bb8"/>
+    <path d="M28 122 Q100 196 172 122 Q100 152 28 122Z" fill="#eaf4ff"/>
+    <circle cx="66" cy="96" r="9" fill="#fff"/><circle cx="134" cy="96" r="9" fill="#fff"/><circle cx="67" cy="97" r="5.5" fill="#1c1233"/><circle cx="133" cy="97" r="5.5" fill="#1c1233"/>
+    <path d="M52 78 L82 90 M148 78 L118 90" stroke="#2f5880" stroke-width="6" stroke-linecap="round"/>
+    <path d="M46 126 Q100 160 154 126Z" fill="#7a1a30"/><path d="M54 128 L62 140 L70 132 L78 144 L86 136 L94 146 L102 138 L110 146 L118 136 L126 144 L134 132 L142 140 L148 128Z" fill="#fff"/>
+    <path d="M168 100 L178 110 M170 112 L180 122" stroke="#3b6a94" stroke-width="3" stroke-linecap="round"/><path d="M32 100 L22 110 M30 112 L20 122" stroke="#3b6a94" stroke-width="3" stroke-linecap="round"/>` },
+  { name: 'Jacaré', bg: '#cdeccb', svg: () => `
+    <ellipse cx="100" cy="120" rx="72" ry="52" fill="#4caf50"/>
+    <circle cx="64" cy="74" r="22" fill="#3f9a43"/><circle cx="136" cy="74" r="22" fill="#3f9a43"/>
+    <circle cx="64" cy="74" r="14" fill="#ffd23f"/><circle cx="136" cy="74" r="14" fill="#ffd23f"/><ellipse cx="64" cy="74" rx="4" ry="11" fill="#1c1233"/><ellipse cx="136" cy="74" rx="4" ry="11" fill="#1c1233"/>
+    <ellipse cx="100" cy="140" rx="48" ry="30" fill="#8bc34a"/><ellipse cx="86" cy="128" rx="4" ry="5" fill="#2e6a2a"/><ellipse cx="114" cy="128" rx="4" ry="5" fill="#2e6a2a"/>
+    <path d="M54 150 Q100 170 146 150" stroke="#2e6a2a" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M62 152 L67 162 L73 155 L80 165 L86 158 L94 167 L100 159 L106 167 L114 158 L120 165 L127 155 L133 162 L138 152Z" fill="#fff"/>
+    <circle cx="44" cy="118" r="4" fill="#3f9a43"/><circle cx="156" cy="118" r="4" fill="#3f9a43"/><circle cx="52" cy="104" r="3" fill="#3f9a43"/><circle cx="148" cy="104" r="3" fill="#3f9a43"/>` },
 ];
 
 // Posição do chapéu em cada personagem: [y da aba do chapéu, largura]
