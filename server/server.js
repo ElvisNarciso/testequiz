@@ -1,4 +1,4 @@
-﻿// Servidor do Quiz ao Vivo (Express + Socket.IO). Estado em memÃ³ria.
+﻿// Servidor do Quiz ao Vivo (Express + Socket.IO). Estado em memória.
 const path = require('path');
 const http = require('http');
 const express = require('express');
@@ -26,7 +26,7 @@ function normalizeQuestion(q, i) {
   const text = String(q.q || q.pergunta || '').trim();
   let options = (q.options || q.opcoes || []).map((o) => String(o).trim()).filter(Boolean);
   if (!text) throw new Error(`Pergunta ${i + 1}: texto vazio`);
-  if (options.length < 2 || options.length > 4) throw new Error(`Pergunta ${i + 1}: use de 2 a 4 opÃ§Ãµes`);
+  if (options.length < 2 || options.length > 4) throw new Error(`Pergunta ${i + 1}: use de 2 a 4 opções`);
   let correct = Number(q.correct ?? q.correta);
   if (!Number.isInteger(correct) || correct < 1 || correct > options.length)
     throw new Error(`Pergunta ${i + 1}: "correct" deve ser de 1 a ${options.length}`);
@@ -41,9 +41,9 @@ function parseQuestions(raw) {
   if (raw[0] === '[' || raw[0] === '{') {
     const data = JSON.parse(raw);
     list = Array.isArray(data) ? data : data.questions || data.perguntas;
-    if (!Array.isArray(list)) throw new Error('JSON invÃ¡lido: esperado uma lista de perguntas');
+    if (!Array.isArray(list)) throw new Error('JSON inválido: esperado uma lista de perguntas');
   } else {
-    // TXT: blocos separados por linha em branco. 1Âª linha = pergunta, demais = opÃ§Ãµes, "*" marca a correta,
+    // TXT: blocos separados por linha em branco. 1ª linha = pergunta, demais = opções, "*" marca a correta,
     // "tempo: 15" opcional.
     list = raw.split(/\r?\n\s*\r?\n/).map((block) => {
       const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
@@ -135,6 +135,7 @@ function playerView(room, p) {
 }
 
 function emitRoom(room) {
+  if (!rooms.has(room.pin)) return;
   io.to('host:' + room.pin).emit('state', hostView(room));
   room.players.forEach((p) => io.to('p:' + room.pin + ':' + p.id).emit('state', playerView(room, p)));
 }
@@ -189,6 +190,17 @@ const cleanAvatar = (a) => {
 io.on('connection', (socket) => {
   let ctx = null; // { room, role, pid }
 
+  socket.on('room:check', ({ pin, token } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    const room = rooms.get(String(pin || '').trim());
+    if (!room) return cb({ open: false, reason: 'Sala fechada ou não encontrada.' });
+    if (room.phase === 'ended') return cb({ open: false, reason: 'Esta sala já foi encerrada.' });
+    const hasPlayer = !!(token && room.players.get(token));
+    if (room.phase !== 'lobby' && !hasPlayer)
+      return cb({ open: false, reason: 'Esta sala já iniciou o jogo.' });
+    cb({ open: true, phase: room.phase, hasPlayer });
+  });
+
   socket.on('host:create', async ({ password, questions, base }, cb) => {
     try {
       if (password !== ADMIN_PASSWORD) return cb({ error: 'Senha incorreta' });
@@ -211,12 +223,23 @@ io.on('connection', (socket) => {
 
   socket.on('host:resume', async ({ pin, hostToken, base }, cb) => {
     const room = rooms.get(pin);
-    if (!room || room.hostToken !== hostToken) return cb({ error: 'Sala nÃ£o encontrada' });
+    if (!room || room.hostToken !== hostToken) return cb({ error: 'Sala não encontrada' });
     socket.join('host:' + pin);
     ctx = { room, role: 'host' };
     const joinUrl = `${fixBase(base)}?pin=${pin}`;
     cb({ ok: true, pin, joinUrl, qr: await QRCode.toDataURL(joinUrl, { margin: 1, width: 360 }) });
     socket.emit('state', hostView(room));
+  });
+
+  socket.on('host:close', (cb) => {
+    if (ctx?.role === 'host') {
+      const room = ctx.room;
+      clearTimeout(room.timer);
+      rooms.delete(room.pin);
+      room.players.forEach((_, id) => io.to('p:' + room.pin + ':' + id).emit('room:closed'));
+      ctx = null;
+    }
+    if (typeof cb === 'function') cb();
   });
 
   socket.on('host:start', () => {
@@ -238,14 +261,15 @@ io.on('connection', (socket) => {
 
   socket.on('player:join', ({ pin, name, avatar, token }, cb) => {
     const room = rooms.get(String(pin || '').trim());
-    if (!room) return cb({ error: 'Sala nÃ£o encontrada. Confira o PIN.' });
+    if (!room) return cb({ error: 'Sala fechada ou não encontrada. Confira o PIN.', closed: true });
+    if (room.phase === 'ended') return cb({ error: 'Esta sala já encerrou.', closed: true });
     let p = token && room.players.get(token);
     if (!p) {
-      if (room.phase !== 'lobby') return cb({ error: 'O jogo jÃ¡ comeÃ§ou. NÃ£o Ã© possÃ­vel entrar agora.' });
+      if (room.phase !== 'lobby') return cb({ error: 'O jogo já começou. Não é possível entrar agora.', closed: true });
       name = String(name || '').trim().slice(0, 14);
       if (!name) return cb({ error: 'Digite um apelido' });
       if ([...room.players.values()].some((x) => x.name.toLowerCase() === name.toLowerCase()))
-        return cb({ error: 'Esse apelido jÃ¡ estÃ¡ em uso' });
+        return cb({ error: 'Esse apelido já está em uso' });
       p = { id: rid(), name, avatar: cleanAvatar(avatar), score: 0, connected: true };
       room.players.set(p.id, p);
     } else {
@@ -256,6 +280,21 @@ io.on('connection', (socket) => {
     ctx = { room, role: 'player', pid: p.id };
     cb({ ok: true, token: p.id });
     emitRoom(room);
+  });
+
+  socket.on('player:leave', (cb) => {
+    if (ctx?.role === 'player') {
+      const { room, pid } = ctx;
+      socket.leave('p:' + room.pin + ':' + pid);
+      if (room.phase === 'lobby') room.players.delete(pid);
+      else {
+        const p = room.players.get(pid);
+        if (p) p.connected = false;
+      }
+      ctx = null;
+      emitRoom(room);
+    }
+    if (typeof cb === 'function') cb();
   });
 
   socket.on('player:avatar', (avatar) => {
@@ -283,9 +322,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    if (ctx?.role === 'player') {
+    if (ctx?.role === 'player' && rooms.has(ctx.room.pin)) {
       const p = ctx.room.players.get(ctx.pid);
-      // sÃ³ marca offline se nÃ£o houver outro socket do mesmo jogador
+      // só marca offline se não houver outro socket do mesmo jogador
       const still = io.sockets.adapter.rooms.get('p:' + ctx.room.pin + ':' + ctx.pid);
       if (p && !(still && still.size)) {
         p.connected = false;
@@ -301,4 +340,3 @@ setInterval(() => {
 }, 600000);
 
 server.listen(PORT, () => console.log(`Quiz ao Vivo rodando em http://localhost:${PORT}  (senha admin: ${ADMIN_PASSWORD})`));
-

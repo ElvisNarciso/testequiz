@@ -60,7 +60,12 @@ $('#start').onclick = () => socket.emit('host:start');
 $('#endQ').onclick = () => socket.emit('host:next');
 $('#toRank').onclick = () => socket.emit('host:next');
 $('#nextQ').onclick = () => socket.emit('host:next');
-$('#newGame').onclick = () => { localStorage.removeItem(HK); location.reload(); };
+const closeAndReload = () => {
+  localStorage.removeItem(HK);
+  if (socket.connected) socket.emit('host:close', () => location.reload());
+  else location.reload();
+};
+$('#newGame').onclick = closeAndReload;
 $('#csv').onclick = () => {
   const rows = ['posicao;nome;pontos', ...current.players.map((p) => `${p.rank};${p.name};${p.score}`)];
   download('resultado.csv', rows.join('\n'), 'text/csv');
@@ -153,5 +158,5 @@ $('#aiCopy').onclick = async () => {
   toast('Prompt copiado! Cole na sua IA.');
 };
 $('#clearQ').onclick = () => { $('#questions').value = ''; localStorage.removeItem('quiz_questions'); $('#questions').focus(); };
-$('#newGame2').onclick = () => { localStorage.removeItem(HK); location.reload(); };
+$('#newGame2').onclick = closeAndReload;
 

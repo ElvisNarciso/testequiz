@@ -5,15 +5,50 @@ let avatar = (saved && saved.avatar) || randomAvatar();
 let joined = false, lastPhase = null, lastQ = -1, choosing = false, showQuestion = localStorage.getItem('quiz_showq') !== '0', curQ = null;
 
 const qs = new URLSearchParams(location.search);
-$('#pin').value = qs.get('pin') || (saved && saved.pin) || '';
-if (qs.get('pin')) { $('#pin').style.display = 'none'; $('#pinRoom').style.display = 'inline-block'; $('#pinShow').textContent = qs.get('pin'); }
+let urlPin = qs.get('pin') || '';
+$('#pin').value = urlPin || (saved && saved.pin) || '';
+if (urlPin) {
+  $('#pin').style.display = 'none';
+  $('#pinRoom').style.display = 'block';
+  $('#pinShow').textContent = urlPin;
+}
 $('#name').value = (saved && saved.name) || '';
+
+function unlinkToJoin(msg, clearPin = true) {
+  localStorage.removeItem(KEY);
+  saved = null;
+  joined = false;
+  choosing = false;
+  lastPhase = null;
+  lastQ = -1;
+  curQ = null;
+  urlPin = '';
+  if (location.search.includes('pin=')) history.replaceState(null, '', location.pathname);
+  $('#pinRoom').style.display = 'none';
+  $('#pin').style.display = '';
+  if (clearPin) $('#pin').value = '';
+  const e = $('#joinErr');
+  if (msg) { e.textContent = msg; e.classList.add('on'); } else e.classList.remove('on');
+  showScreen('s-join');
+  $('#pin').focus();
+}
+
+function leaveRoom() {
+  if (socket.connected) socket.emit('player:leave', () => unlinkToJoin('', true));
+  else unlinkToJoin('', true);
+}
 
 mountAvatarEditor($('#editor'), avatar, (a) => {
   if (joined) { socket.emit('player:avatar', a); if (saved) { saved.avatar = a; localStorage.setItem(KEY, JSON.stringify(saved)); } }
 });
 $('#dressOk').onclick = () => { choosing = false; socket.emit('player:avatar', avatar); showScreen('s-lobby'); };
 $('#changeAv').onclick = () => { choosing = true; showScreen('s-dress'); };
+$('#changePin').onclick = () => unlinkToJoin('', true);
+$('#pinPill').onclick = () => unlinkToJoin('', true);
+$('#leaveLobby').onclick = leaveRoom;
+$('#leaveDress').onclick = leaveRoom;
+$('#leaveLost').onclick = () => unlinkToJoin('', true);
+
 const applyShowQ = () => {
   $('#qShow').style.display = showQuestion && curQ ? 'block' : 'none';
   $('#qShow').textContent = curQ || '';
@@ -22,11 +57,15 @@ const applyShowQ = () => {
 $('#showQ').onclick = () => { showQuestion = !showQuestion; localStorage.setItem('quiz_showq', showQuestion ? '1' : '0'); applyShowQ(); };
 
 function join(auto) {
-  const pin = $('#pin').value.trim(), name = $('#name').value.trim();
+  const pin = (auto && saved ? saved.pin : $('#pin').value).trim();
+  const name = (auto && saved ? saved.name : $('#name').value).trim();
   const tokenSaved = saved && saved.pin === pin ? saved.token : null;
   socket.emit('player:join', { pin, name, avatar, token: tokenSaved }, (res) => {
     if (res.error) {
-      if (auto) { localStorage.removeItem(KEY); saved = null; showScreen('s-join'); }
+      if (auto || res.closed) {
+        unlinkToJoin(auto ? 'A sala anterior foi fechada. Você foi desvinculado — digite um novo PIN.' : res.error, res.closed);
+        return;
+      }
       const e = $('#joinErr'); e.textContent = res.error; e.classList.add('on');
       return;
     }
@@ -37,12 +76,24 @@ function join(auto) {
   });
 }
 $('#joinBtn').onclick = () => { $('#joinErr').classList.remove('on'); join(false); };
-$('#leave').onclick = () => { localStorage.removeItem(KEY); location.href = location.pathname; };
+$('#leave').onclick = () => unlinkToJoin('', true);
 
-// reconexão automática: ao conectar de novo, volta para a mesma sala
-socket.on('connect', () => { if (saved) join(true); });
+// Ao conectar: se havia sessão salva (mesma sala ou sem ?pin= novo), verifica e volta;
+// se veio só ?pin= na URL, verifica se a sala ainda está aberta.
+socket.on('connect', () => {
+  if (saved && (!urlPin || urlPin === saved.pin)) {
+    join(true);
+  } else if (urlPin) {
+    socket.emit('room:check', { pin: urlPin, token: null }, (res) => {
+      if (res && !res.open) {
+        unlinkToJoin(`A sala ${urlPin} foi fechada (${res.reason}). Digite um novo PIN.`, true);
+      }
+    });
+  }
+});
 socket.on('disconnect', () => { if (joined) showScreen('s-lost'); });
-socket.on('kicked', () => { localStorage.removeItem(KEY); alert('Você foi removido da sala.'); location.href = location.pathname; });
+socket.on('room:closed', () => unlinkToJoin('A sala foi fechada pelo host. Digite um novo PIN.', true));
+socket.on('kicked', () => unlinkToJoin('Você foi removido da sala.', true));
 
 socket.on('state', (s) => {
   syncClock(s.now);
@@ -98,4 +149,3 @@ socket.on('state', (s) => {
   }
   lastPhase = s.phase;
 });
-

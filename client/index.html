@@ -14,7 +14,12 @@
   <h1 class="logo"><span>Quiz</span> <span>ao</span> <span>Vi</span><span>vo</span></h1>
   <div class="card">
     <p class="hello">👋 Bem-vindo(a)! Vamos jogar?</p>
-    <div id="pinRoom" class="pill" style="display:none;margin-bottom:10px">Sala <b id="pinShow"></b></div>
+    <div id="pinRoom" style="display:none;margin-bottom:10px">
+      <div class="row" style="justify-content:center;gap:8px">
+        <span class="pill" id="pinPill" style="cursor:pointer" title="Clique para trocar de sala">Sala <b id="pinShow"></b></span>
+        <button type="button" class="btn ghost small" id="changePin">🔓 Trocar sala</button>
+      </div>
+    </div>
     <input id="pin" inputmode="numeric" maxlength="6" placeholder="PIN do jogo">
     <div style="height:10px"></div>
     <input id="name" maxlength="14" placeholder="Qual é o seu nome?" autocomplete="off">
@@ -26,7 +31,7 @@
 
 <section class="screen" id="s-dress">
   <h2 class="logo" style="font-size:1.8rem">Escolha seu personagem</h2>
-  <div class="card"><div id="editor"></div><div style="height:12px"></div><button class="btn go big" id="dressOk">Pronto ✔</button></div>
+  <div class="card"><div id="editor"></div><div style="height:12px"></div><div class="row"><button class="btn go big" id="dressOk">Pronto ✔</button></div><div style="height:8px"></div><button class="btn ghost small" id="leaveDress">🚪 Sair da sala</button></div>
 </section>
 
 <section class="screen" id="s-lobby">
@@ -36,7 +41,10 @@
   <div class="pill" id="lobbyCount"></div>
   <p class="muted">Aguardando o host iniciar o jogo…</p>
   <div class="credit big">✨ Desenvolvido por <b>Elvis Narciso</b></div>
-  <button class="btn ghost small" id="changeAv">🎭 Trocar personagem</button>
+  <div class="row">
+    <button class="btn ghost small" id="changeAv">🎭 Trocar personagem</button>
+    <button class="btn ghost small" id="leaveLobby">🚪 Sair da sala</button>
+  </div>
 </section>
 
 <section class="screen" id="s-question">
@@ -76,7 +84,11 @@
 </section>
 
 <section class="screen" id="s-lost">
-  <div class="card"><h2>Reconectando…</h2><p class="muted">Se demorar, recarregue a página.</p></div>
+  <div class="card">
+    <h2>Reconectando…</h2>
+    <p class="muted">Se demorar ou a sala tiver fechado, você pode sair e digitar outro PIN.</p>
+    <button class="btn ghost small" id="leaveLost">🔓 Desvincular e digitar outro PIN</button>
+  </div>
 </section>
 
 <div class="credit fixed">✨ Desenvolvido por <b>Elvis Narciso</b></div>
