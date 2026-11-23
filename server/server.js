@@ -22,20 +22,34 @@ const fixBase = (b) => { const ip = lanIP(); return ip ? String(b).replace(/\/\/
 const rid = () => crypto.randomBytes(12).toString('hex');
 
 // ---------- parsing de perguntas ----------
+function stripCodeFence(raw) {
+  const m = raw.match(/```(?:json|txt|text|markdown)?\s*\r?\n([\s\S]*?)\r?\n```/i);
+  return m ? m[1].trim() : raw.replace(/^```[^\n]*\r?\n?/, '').replace(/\r?\n?```$/, '').trim();
+}
+
 function normalizeQuestion(q, i) {
-  const text = String(q.q || q.pergunta || '').trim();
-  let options = (q.options || q.opcoes || []).map((o) => String(o).trim()).filter(Boolean);
+  const text = String(q.q || q.pergunta || q.question || '').trim();
+  const label = text ? `"${text.slice(0, 36)}${text.length > 36 ? '…' : ''}"` : 'sem texto';
+  const rawOpts = q.options || q.opcoes || q.alternativas || [];
+  let options = rawOpts.map((o) => String(o).trim()).filter(Boolean);
   if (!text) throw new Error(`Pergunta ${i + 1}: texto vazio`);
-  if (options.length < 2 || options.length > 4) throw new Error(`Pergunta ${i + 1}: use de 2 a 4 opções`);
-  let correct = Number(q.correct ?? q.correta);
+  if (options.length < 2 || options.length > 4)
+    throw new Error(`Pergunta ${i + 1} (${label}): use de 2 a 4 opções (encontradas: ${options.length})`);
+  let correct = q.correct ?? q.correta ?? q.resposta;
+  if (typeof correct === 'string' && !/^\d+$/.test(correct.trim())) {
+    const idx = options.findIndex((o) => o.toLowerCase() === correct.trim().toLowerCase());
+    correct = idx >= 0 ? idx + 1 : 0;
+  } else {
+    correct = Number(correct);
+  }
   if (!Number.isInteger(correct) || correct < 1 || correct > options.length)
-    throw new Error(`Pergunta ${i + 1}: "correct" deve ser de 1 a ${options.length}`);
+    throw new Error(`Pergunta ${i + 1} (${label}): marque a resposta correta com * no início`);
   const time = Math.min(120, Math.max(5, Number(q.time || q.tempo) || 20));
   return { text, options, correct: correct - 1, time };
 }
 
 function parseQuestions(raw) {
-  raw = String(raw || '').trim();
+  raw = stripCodeFence(String(raw || '').trim());
   if (!raw) throw new Error('Cole as perguntas primeiro');
   let list;
   if (raw[0] === '[' || raw[0] === '{') {
@@ -44,18 +58,44 @@ function parseQuestions(raw) {
     if (!Array.isArray(list)) throw new Error('JSON inválido: esperado uma lista de perguntas');
   } else {
     // TXT: blocos separados por linha em branco. 1ª linha = pergunta, demais = opções, "*" marca a correta,
-    // "tempo: 15" opcional.
-    list = raw.split(/\r?\n\s*\r?\n/).map((block) => {
-      const lines = block.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-      const q = { q: lines.shift(), options: [], correct: 0, time: 20 };
-      lines.forEach((l) => {
-        const t = l.match(/^tempo\s*:\s*(\d+)/i);
-        if (t) return (q.time = Number(t[1]));
-        if (l.startsWith('*')) q.correct = q.options.length + 1;
-        q.options.push(l.replace(/^\*\s*/, ''));
+    // "tempo: 15" opcional. Tolera markdown simples e marcadores como (correta) / [CORRETA].
+    list = raw
+      .split(/\r?\n\s*\r?\n/)
+      .map((b) => b.trim())
+      .filter((b) => b && !/^[-_=]{3,}$/.test(b))
+      .map((block) => {
+        const lines = block
+          .split(/\r?\n/)
+          .map((l) => l.trim().replace(/^\*\*(.+)\*\*$/, '$1').trim())
+          .filter(Boolean);
+        let title = (lines.shift() || '').replace(/^(?:pergunta\s*)?\d+\s*[:)\-]\s+/i, '').trim();
+        const q = { q: title, options: [], correct: 0, time: 20 };
+        lines.forEach((l) => {
+          const t = l.match(/^(?:tempo|time)\s*:\s*(\d+)/i);
+          if (t) return (q.time = Number(t[1]));
+          const ansLine = l.match(/^(?:resposta\s*correta|correta|resposta)\s*:\s*(.+)$/i);
+          if (ansLine) {
+            const v = ansLine[1].trim();
+            if (/^[1-4]$/.test(v)) q.correct = Number(v);
+            else if (/^[a-d]$/i.test(v)) q.correct = v.toUpperCase().charCodeAt(0) - 64;
+            else q.correct = v;
+            return;
+          }
+          let isRight = /^\*/.test(l) || /\*\s*$/.test(l) || /(\[correta\]|\(correta\)|\(certa\)|✔|✅)/i.test(l);
+          let opt = l
+            .replace(/^\*+\s*/, '')
+            .replace(/\s*\*+$/, '')
+            .replace(/\s*(\[correta\]|\(correta\)|\(certa\)|✔|✅)/gi, '')
+            .replace(/^(?:[a-dA-D][).]\s+|-\s+)/, '')
+            .replace(/^\*\*(.+)\*\*$/, '$1')
+            .trim();
+          if (opt.startsWith('*')) { isRight = true; opt = opt.replace(/^\*+\s*/, '').trim(); }
+          if (!opt) return;
+          if (isRight) q.correct = q.options.length + 1;
+          q.options.push(opt);
+        });
+        return q;
       });
-      return q;
-    });
   }
   if (!list.length) throw new Error('Nenhuma pergunta encontrada');
   return list.map(normalizeQuestion);

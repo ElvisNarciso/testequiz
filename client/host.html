@@ -30,14 +30,22 @@
   <div class="card wide">
     <details class="ai-box" id="aiBox">
       <summary>🤖 Gerar perguntas com IA (copiar prompt)</summary>
-      <p class="muted" style="margin:8px 0">Copie o prompt, cole no ChatGPT/Gemini e troque <b>[TEMA]</b> pelo assunto (ou preencha o tema aqui). Depois copie a resposta da IA e cole na caixa de perguntas abaixo.</p>
-      <div class="row"><input id="aiTheme" placeholder="Tema (opcional, ex: História do Brasil)"><input id="aiCount" type="number" min="3" max="40" value="10" style="max-width:110px" title="Quantidade de perguntas"></div>
+      <p class="muted" style="margin:8px 0">Escolha o tema, a quantidade e o tipo, copie o prompt e cole no ChatGPT ou Gemini. Depois cole a resposta da IA abaixo e clique em <b>Carregar e pré-visualizar</b>.</p>
+      <div class="row">
+        <input id="aiTheme" placeholder="Tema (ex: Química Orgânica)">
+        <input id="aiCount" type="number" min="3" max="40" value="10" style="max-width:90px" title="Quantidade de perguntas">
+        <select id="aiType" title="Tipo de pergunta">
+          <option value="mix">Misturado (Quiz + V/F)</option>
+          <option value="quiz">Só Quiz (4 opções)</option>
+          <option value="tf">Só Verdadeiro / Falso</option>
+        </select>
+      </div>
       <textarea id="aiPrompt" readonly></textarea>
       <div class="row"><button class="btn small go" id="aiCopy">📋 Copiar prompt</button></div>
     </details>    <textarea id="questions" spellcheck="false" placeholder="Cole aqui as perguntas (JSON ou TXT)…"></textarea>
     <div class="row" style="margin-top:10px">
       <label class="btn ghost small" style="cursor:pointer">📂 Abrir arquivo<input id="file" type="file" accept=".json,.txt" hidden></label>
-      <button class="btn small" id="miniQuiz">⚡ Carregar mini quiz (5 perguntas)</button>
+      <button class="btn small" id="miniQuiz">⚡ Mini quiz (5)</button>
       <button class="btn ghost small" id="tplJson">Modelo JSON</button>
       <button class="btn ghost small" id="tplTxt">Modelo TXT</button>
       <button class="btn ghost small" id="clearQ">🧹 Limpar</button>
@@ -45,9 +53,11 @@
     <div class="err" id="setupErr" style="margin-top:10px"></div>
     <div style="height:12px"></div>
     <div class="row">
+      <button class="btn" id="previewBtn">👁️ Carregar e pré-visualizar</button>
       <button class="btn go big" id="create">Criar sala</button>
       <button class="btn ghost small" id="logoutAdmin">🔒 Sair</button>
     </div>
+    <div id="previewBox" class="preview-box" style="display:none"></div>
   </div>
 </section>
 

@@ -160,7 +160,20 @@ body {
 .ai-box summary { cursor: pointer; font-weight: 700; font-size: 1.1rem; }
 .ai-box textarea { min-height: 150px; font-size: .82rem; margin-top: 8px; }
 .ai-box .row { margin-top: 8px; }
-.ai-box input { width: auto; flex: 1; min-width: 160px; font-size: 1rem; padding: 8px 12px; }
+.ai-box input, .ai-box select { width: auto; flex: 1; min-width: 150px; font-size: 1rem; padding: 8px 12px; font-family: inherit; border-radius: 12px; border: 2px solid transparent; background: #fff; color: #1b1042; font-weight: 600; outline: none; }
+/* pré-visualização das perguntas */
+.preview-box { margin-top: 16px; text-align: left; display: flex; flex-direction: column; gap: 10px; max-height: 46vh; overflow-y: auto; padding-right: 4px; }
+.pv-summary { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; background: rgba(0,216,74,.2); border: 1px solid rgba(0,216,74,.5); padding: 8px 14px; border-radius: 14px; font-weight: 700; }
+.pv-card { background: rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 12px 14px; }
+.pv-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-size: .85rem; opacity: .85; margin-bottom: 6px; }
+.pv-q { font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; }
+.pv-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pv-opt { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 10px; font-weight: 600; font-size: .9rem; color: #fff; opacity: .7; }
+.pv-opt.c0 { background: var(--c0); } .pv-opt.c1 { background: var(--c1); } .pv-opt.c2 { background: var(--c2); color: #3a2400; } .pv-opt.c3 { background: var(--c3); color: #022d10; }
+.pv-opt.ok { opacity: 1; outline: 3px solid #fff; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+.pv-opt svg { width: 16px; height: 16px; flex: none; }
+.pv-opt.c2 svg path, .pv-opt.c3 svg path, .pv-opt.c2 svg circle, .pv-opt.c3 svg rect { fill: currentColor; }
+@media (max-width: 560px) { .pv-opts { grid-template-columns: 1fr; } }
 
 /* créditos */
 .credit { font-weight: 600; letter-spacing: .02em; }
