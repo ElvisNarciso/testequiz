@@ -145,7 +145,7 @@ const CHARACTERS = [
 ];
 
 // Posição do chapéu em cada personagem: [y da aba do chapéu, largura]
-const HATPOS = { Gatinho: [72, 92], Ursinho: [64, 98], Monstrinho: [64, 100], Caveira: [46, 100], Cachorrinho: [64, 90], Panda: [60, 104], Robô: [52, 104], Alienígena: [62, 92], Coelhinho: [86, 94], Raposa: [78, 100], Pinguim: [60, 78], Sapinho: [66, 86], Fantasminha: [48, 100], Leãozinho: [54, 100], Unicórnio: [76, 86], Viking: [60, 94], Ninja: [58, 98], Astronauta: [44, 92], Pirata: [58, 94], Lobo: [66, 86], Heroína: [58, 90], Ruiva: [60, 88] };
+const HATPOS = { Gatinho: [72, 92], Ursinho: [64, 98], Monstrinho: [64, 100], Caveira: [46, 100], Cachorrinho: [64, 90], Panda: [60, 104], Robô: [52, 104], Alienígena: [62, 92], Coelhinho: [86, 94], Raposa: [78, 100], Pinguim: [60, 78], Sapinho: [66, 86], Fantasminha: [48, 100], Leãozinho: [54, 100], Unicórnio: [76, 86], Viking: [60, 94], Ninja: [58, 98], Astronauta: [44, 92], Pirata: [58, 94], Lobo: [66, 86], Heroína: [58, 90], Ruiva: [60, 88], Camaleão: [72, 84], Coruja: [64, 80], Tigre: [66, 92], Elefante: [60, 82], Macaco: [62, 88], Dragão: [62, 88], Tubarão: [64, 84], Jacaré: [72, 72] };
 
 // Chapéus: desenhados com a aba em y=0, largura ~100, crescendo para cima
 const HATS = [
@@ -162,34 +162,58 @@ const HATS = [
   { name: 'Viking', svg: `<path d="M-42 6 Q-44 -42 0 -42 Q44 -42 42 6Z" fill="#9aa5b1"/><path d="M-30 -12 Q-28 -32 -14 -36" stroke="#fff" stroke-width="4" fill="none" opacity=".5" stroke-linecap="round"/><rect x="-44" y="-6" width="88" height="11" rx="5" fill="#6b7682"/><path d="M-40 -8 Q-72 -12 -66 -52 Q-50 -26 -36 -26Z" fill="#f4ecd8" stroke="#cdbf9c" stroke-width="2"/><path d="M40 -8 Q72 -12 66 -52 Q50 -26 36 -26Z" fill="#f4ecd8" stroke="#cdbf9c" stroke-width="2"/>` },
 ];
 
-function randomAvatar() { return { id: Math.floor(Math.random() * CHARACTERS.length), hat: 0 }; }
-function defaultAvatar() { return { id: 0, hat: 0 }; }
+// Âncora dos olhos de cada personagem: [y dos olhos, metade da distância entre os olhos]
+// É esse "código" que encaixa os óculos certinho em cada personagem.
+const EYEPOS = { Gatinho: [104, 28], Ursinho: [100, 28], Monstrinho: [100, 30], Caveira: [98, 32], Cachorrinho: [100, 26], Panda: [102, 30], Robô: [86, 24], Alienígena: [98, 38], Coelhinho: [114, 26], Raposa: [98, 28], Pinguim: [84, 20], Sapinho: [54, 36], Fantasminha: [94, 24], Leãozinho: [100, 24], Unicórnio: [108, 24], Viking: [105, 24], Ninja: [104, 24], Astronauta: [104, 17], Pirata: [101, 25], Lobo: [104, 28], Heroína: [106, 22], Ruiva: [108, 22], Camaleão: [86, 40], Coruja: [102, 30], Tigre: [102, 26], Elefante: [94, 22], Macaco: [104, 22], Dragão: [100, 26], Tubarão: [96, 34], Jacaré: [74, 36] };
 
+// Óculos: olhos em (-28,0) e (28,0), ponte no meio. Escalam pela distância dos olhos do personagem.
+const GLASSES = [
+  { name: 'Sem óculos', svg: '' },
+  { name: 'Redondo', svg: `<g fill="rgba(180,220,255,.28)" stroke="#222" stroke-width="4"><circle cx="-28" cy="0" r="16"/><circle cx="28" cy="0" r="16"/></g><path d="M-12 -2 Q0 -8 12 -2" stroke="#222" stroke-width="4" fill="none"/><path d="M-44 -2 L-52 -6 M44 -2 L52 -6" stroke="#222" stroke-width="4" stroke-linecap="round"/>` },
+  { name: 'Escuros', svg: `<path d="M-48 -10 L-8 -10 Q-6 14 -26 16 Q-46 16 -48 -10Z M48 -10 L8 -10 Q6 14 26 16 Q46 16 48 -10Z" fill="#111"/><path d="M-8 -8 Q0 -12 8 -8" stroke="#111" stroke-width="5" fill="none"/><path d="M-40 -6 L-26 -6 M18 -6 L32 -6" stroke="#fff" stroke-width="3" opacity=".45" stroke-linecap="round"/><path d="M-48 -8 L-54 -10 M48 -8 L54 -10" stroke="#111" stroke-width="4" stroke-linecap="round"/>` },
+  { name: 'Nerd', svg: `<g fill="rgba(180,220,255,.25)" stroke="#5a3a22" stroke-width="4.5"><rect x="-46" y="-13" width="36" height="26" rx="6"/><rect x="10" y="-13" width="36" height="26" rx="6"/></g><path d="M-10 -4 L10 -4" stroke="#5a3a22" stroke-width="4"/><path d="M-46 -6 L-54 -8 M46 -6 L54 -8" stroke="#5a3a22" stroke-width="4" stroke-linecap="round"/>` },
+  { name: 'Coração', svg: `<g fill="#ff4d8d" stroke="#c4175f" stroke-width="3" stroke-linejoin="round"><path d="M-28 16 L-44 -2 Q-50 -16 -36 -16 Q-28 -16 -28 -8 Q-28 -16 -20 -16 Q-6 -16 -12 -2Z"/><path d="M28 16 L12 -2 Q6 -16 20 -16 Q28 -16 28 -8 Q28 -16 36 -16 Q50 -16 44 -2Z"/></g><path d="M-14 -8 Q0 -14 14 -8" stroke="#c4175f" stroke-width="4" fill="none"/><path d="M-36 -10 L-30 -10" stroke="#fff" stroke-width="3" opacity=".6" stroke-linecap="round"/>` },
+  { name: 'Estrela', svg: `<g fill="#ffd23f" stroke="#e09f00" stroke-width="3" stroke-linejoin="round"><path d="M-28 -20 L-22 -6 L-6 -5 L-18 5 L-14 20 L-28 12 L-42 20 L-38 5 L-50 -5 L-34 -6Z"/><path d="M28 -20 L34 -6 L50 -5 L38 5 L42 20 L28 12 L14 20 L18 5 L6 -5 L22 -6Z"/></g><path d="M-8 -4 L8 -4" stroke="#e09f00" stroke-width="4"/>` },
+  { name: 'Aviador', svg: `<g stroke="#d9a400" stroke-width="3.5" fill="rgba(40,40,60,.8)"><path d="M-48 -12 Q-10 -16 -10 -2 Q-10 20 -30 20 Q-50 18 -48 -12Z"/><path d="M48 -12 Q10 -16 10 -2 Q10 20 30 20 Q50 18 48 -12Z"/></g><path d="M-10 -6 Q0 -12 10 -6" stroke="#d9a400" stroke-width="3.5" fill="none"/><path d="M-40 -6 Q-32 -8 -24 -4" stroke="#fff" stroke-width="3" opacity=".45" fill="none" stroke-linecap="round"/>` },
+  { name: 'Visor', svg: `<rect x="-54" y="-14" width="108" height="28" rx="14" fill="#0b1b3a" stroke="#18c8ff" stroke-width="3.5"/><rect x="-46" y="-6" width="92" height="12" rx="6" fill="#18c8ff" opacity=".9"/><rect x="-38" y="-4" width="30" height="3" rx="1.5" fill="#fff" opacity=".7"/>` },
+];
+
+function randomAvatar() { return { id: Math.floor(Math.random() * CHARACTERS.length), hat: 0, glasses: 0 }; }
+function defaultAvatar() { return { id: 0, hat: 0, glasses: 0 }; }
+
+// Camadas: personagem → óculos → chapéu. Cada uma usa a âncora do personagem (EYEPOS / HATPOS).
 function avatarSVG(a, size = 120) {
   const id = ((a && a.id) || 0) % CHARACTERS.length;
   const c = CHARACTERS[id];
   const hi = ((a && a.hat) || 0) % HATS.length;
+  const gi = ((a && a.glasses) || 0) % GLASSES.length;
   const [hy, hw] = HATPOS[c.name] || [60, 90];
+  const [ey, eh] = EYEPOS[c.name] || [100, 26];
   const hat = hi ? `<g transform="translate(100 ${hy}) scale(${hw / 100})">${HATS[hi].svg}</g>` : '';
+  const gl = gi ? `<g transform="translate(100 ${ey}) scale(${eh / 28})">${GLASSES[gi].svg}</g>` : '';
   return `<svg class="avatar" width="${size}" height="${size}" viewBox="-10 -34 220 234" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}">
   <defs><clipPath id="avclip"><circle cx="100" cy="100" r="98"/></clipPath></defs>
-  <circle cx="100" cy="100" r="98" fill="${c.bg}"/><g clip-path="url(#avclip)">${c.svg()}</g>${hat}</svg>`;
+  <circle cx="100" cy="100" r="98" fill="${c.bg}"/><g clip-path="url(#avclip)">${c.svg()}</g>${gl}${hat}</svg>`;
 }
 
-// Seletor com duas abas: Personagem e Chapéus (teste à vontade, dá para trocar quantas vezes quiser)
+// Seletor com três abas: Personagem, Chapéus e Óculos (combine à vontade e veja na prévia)
 function mountAvatarEditor(el, state, onChange) {
   let tab = 'char';
+  const TABS = { char: ['🧑 Personagem', 'id'], hat: ['🎩 Chapéus', 'hat'], glasses: ['🕶️ Óculos', 'glasses'] };
   const render = () => {
-    const items = tab === 'char'
-      ? CHARACTERS.map((c, i) => ({ i, label: c.name, svg: avatarSVG({ id: i, hat: state.hat || 0 }, 64), sel: state.id === i }))
-      : HATS.map((h, i) => ({ i, label: h.name, svg: i ? avatarSVG({ id: state.id, hat: i }, 64) : `<div class="nohat">🚫</div>`, sel: (state.hat || 0) === i }));
+    const cur = { id: state.id || 0, hat: state.hat || 0, glasses: state.glasses || 0 };
+    let items;
+    if (tab === 'char') items = CHARACTERS.map((c, i) => ({ i, label: c.name, svg: avatarSVG({ ...cur, id: i }, 64), sel: cur.id === i }));
+    else if (tab === 'hat') items = HATS.map((h, i) => ({ i, label: h.name, svg: i ? avatarSVG({ ...cur, hat: i }, 64) : '<div class="nohat">🚫</div>', sel: cur.hat === i }));
+    else items = GLASSES.map((g, i) => ({ i, label: g.name, svg: i ? avatarSVG({ ...cur, glasses: i }, 64) : '<div class="nohat">🚫</div>', sel: cur.glasses === i }));
+    const extra = [state.hat ? HATS[state.hat].name : '', state.glasses ? GLASSES[state.glasses].name : ''].filter(Boolean).join(' · ');
     el.innerHTML = `
-      <div class="av-preview">${avatarSVG(state, 150)}</div>
-      <div class="av-name">${CHARACTERS[state.id].name}${state.hat ? ' · ' + HATS[state.hat].name : ''}</div>
-      <div class="av-tabs2"><button class="tab${tab === 'char' ? ' on' : ''}" data-t="char">🧑 Personagem</button><button class="tab${tab === 'hat' ? ' on' : ''}" data-t="hat">🎩 Chapéus</button></div>
+      <div class="av-preview">${avatarSVG(cur, 150)}</div>
+      <div class="av-name">${CHARACTERS[cur.id].name}${extra ? ' · ' + extra : ''}</div>
+      <div class="av-tabs2">${Object.entries(TABS).map(([k, v]) => `<button class="tab${tab === k ? ' on' : ''}" data-t="${k}">${v[0]}</button>`).join('')}</div>
       <div class="av-grid">${items.map((o) => `<button class="av-pick${o.sel ? ' sel' : ''}" data-i="${o.i}" aria-label="${o.label}" title="${o.label}">${o.svg}</button>`).join('')}</div>`;
     el.querySelectorAll('[data-t]').forEach((b) => (b.onclick = () => { tab = b.dataset.t; render(); }));
-    el.querySelectorAll('[data-i]').forEach((b) => (b.onclick = () => { state[tab === 'char' ? 'id' : 'hat'] = +b.dataset.i; onChange && onChange(state); render(); }));
+    el.querySelectorAll('[data-i]').forEach((b) => (b.onclick = () => { state[TABS[tab][1]] = +b.dataset.i; onChange && onChange(state); render(); }));
   };
   render();
 }
