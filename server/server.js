@@ -45,7 +45,8 @@ function normalizeQuestion(q, i) {
   if (!Number.isInteger(correct) || correct < 1 || correct > options.length)
     throw new Error(`Pergunta ${i + 1} (${label}): marque a resposta correta com * no início`);
   const time = Math.min(120, Math.max(5, Number(q.time || q.tempo) || 20));
-  return { text, options, correct: correct - 1, time };
+  const dbl = Boolean(q.double || q.dobro || q.pontos === '2x' || q.points === 2);
+  return { text, options, correct: correct - 1, time, double: dbl };
 }
 
 function parseQuestions(raw) {
@@ -73,6 +74,7 @@ function parseQuestions(raw) {
         lines.forEach((l) => {
           const t = l.match(/^(?:tempo|time)\s*:\s*(\d+)/i);
           if (t) return (q.time = Number(t[1]));
+          if (/^(?:pontos?\s*:\s*2x|dobro|2x|pontos?\s+duplos?)$/i.test(l)) return (q.double = true);
           const ansLine = l.match(/^(?:resposta\s*correta|correta|resposta)\s*:\s*(.+)$/i);
           if (ansLine) {
             const v = ansLine[1].trim();
@@ -99,6 +101,38 @@ function parseQuestions(raw) {
   }
   if (!list.length) throw new Error('Nenhuma pergunta encontrada');
   return list.map(normalizeQuestion);
+}
+
+function applyDoublePoints(list, doubleCount) {
+  const n = Number(doubleCount);
+  if (!Number.isInteger(n) || n < 0) return list;
+  const out = list.map((q) => ({ ...q }));
+  let picked = out.filter((q) => q.double).length;
+  if (picked > n) {
+    let keep = n;
+    out.forEach((q) => { if (q.double) { if (keep > 0) keep--; else q.double = false; } });
+  } else if (picked < n) {
+    // Promove perguntas (preferindo Quiz de 3-4 opções da metade para o fim)
+    const cands = out
+      .map((q, idx) => ({ q, idx }))
+      .filter((x) => !x.q.double)
+      .sort((a, b) => {
+        const qa = a.q.options.length > 2 ? 1 : 0, qb = b.q.options.length > 2 ? 1 : 0;
+        if (qb !== qa) return qb - qa;
+        return b.idx - a.idx;
+      });
+    for (const c of cands) {
+      if (picked >= n) break;
+      if (c.idx === 0 && out.length > n) continue;
+      c.q.double = true;
+      picked++;
+    }
+    for (const c of cands) {
+      if (picked >= n) break;
+      if (!c.q.double) { c.q.double = true; picked++; }
+    }
+  }
+  return out;
 }
 
 function shuffleQuestionOptions(q) {
@@ -132,6 +166,7 @@ function questionView(room, withCorrect) {
     text: q.text,
     options: q.options,
     time: q.time,
+    double: !!q.double,
     endsAt: room.endsAt,
     ...(withCorrect ? { correct: q.correct } : {}),
   };
@@ -208,6 +243,7 @@ function startQuestion(room) {
   const q = room.questions[room.qIndex];
   room.phase = 'question';
   room.answers = new Map();
+  room.top3Ids = new Set(ranking(room).slice(0, 3).filter((p) => p.score > 0).map((p) => p.id));
   room.startedAt = Date.now();
   room.endsAt = room.startedAt + q.time * 1000;
   room.timer = setTimeout(() => endQuestion(room), q.time * 1000 + 400);
@@ -296,18 +332,20 @@ io.on('connection', (socket) => {
     catch { cb({ error: 'Erro ao ler o quiz' }); }
   });
 
-  socket.on('host:create', async ({ password, questions, base, timeOverride, shuffle }, cb) => {
+  socket.on('host:create', async ({ password, questions, base, timeOverride, shuffle, doubleCount, podiumPenalty }, cb) => {
     try {
       if (password !== ADMIN_PASSWORD) return cb({ error: 'Senha incorreta' });
       let qs = parseQuestions(questions);
       const tOv = Number(timeOverride);
       if (Number.isFinite(tOv) && tOv >= 5 && tOv <= 120) qs = qs.map((q) => ({ ...q, time: tOv }));
+      qs = applyDoublePoints(qs, doubleCount);
       const shuf = !!shuffle;
       const pin = newPin();
       const room = {
         pin, hostToken: rid(), phase: 'lobby', baseQuestions: qs,
         questions: shuf ? qs.map(shuffleQuestionOptions) : qs,
-        shuffle: shuf, qIndex: 0, players: new Map(), answers: new Map(), created: Date.now(),
+        shuffle: shuf, podiumPenalty: podiumPenalty !== false,
+        qIndex: 0, players: new Map(), answers: new Map(), created: Date.now(),
       };
       rooms.set(pin, room);
       socket.join('host:' + pin);
@@ -424,9 +462,17 @@ io.on('connection', (socket) => {
     if (now > room.endsAt + 600 || !Number.isInteger(choice) || choice < 0 || choice >= q.options.length) return;
     const frac = Math.min(1, (now - room.startedAt) / (q.time * 1000));
     const ok = choice === q.correct;
-    const points = ok ? Math.round(1000 * (1 - frac / 2)) : 0;
+    const basePts = q.double ? 2000 : 1000;
+    let points = 0;
+    if (ok) {
+      points = Math.round(basePts * (1 - frac / 2));
+    } else if (room.podiumPenalty && room.top3Ids && room.top3Ids.has(ctx.pid)) {
+      const pl = room.players.get(ctx.pid);
+      points = -Math.min(pl.score, q.double ? 400 : 250);
+    }
     room.answers.set(ctx.pid, { choice, points });
-    room.players.get(ctx.pid).score += points;
+    const pl = room.players.get(ctx.pid);
+    pl.score = Math.max(0, pl.score + points);
     io.to('p:' + room.pin + ':' + ctx.pid).emit('state', playerView(room, room.players.get(ctx.pid)));
     emitProgress(room);
     const connected = [...room.players.values()].filter((p) => p.connected).length;

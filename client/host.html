@@ -64,7 +64,19 @@
           <option value="60">60s (todas)</option>
         </select>
       </label>
+      <label class="opt-pill">⚡ Pontos duplos (2x):
+        <select id="doubleCount">
+          <option value="-1">Usar marcação do texto</option>
+          <option value="0">0 (nenhuma)</option>
+          <option value="1">1 pergunta</option>
+          <option value="2">2 perguntas</option>
+          <option value="3" selected>3 perguntas</option>
+          <option value="4">4 perguntas</option>
+          <option value="5">5 perguntas</option>
+        </select>
+      </label>
       <label class="opt-pill"><input type="checkbox" id="shuffleOpts" checked> 🔀 Embaralhar alternativas</label>
+      <label class="opt-pill"><input type="checkbox" id="podiumPenalty" checked> ⚖️ Top 3 perde pts se errar</label>
     </div>
     <div style="height:12px"></div>
     <div class="row">
@@ -92,6 +104,7 @@
 <section class="screen" id="h-question">
   <div class="topbar"><span class="pill" id="hqNum"></span><span class="pill">✋ <b id="hAnswered">0</b> / <span id="hTotal">0</span> responderam</span><div class="clock" id="hClock"></div></div>
   <div class="timer"><i id="hBar"></i></div>
+  <div class="double-banner" id="hDouble" style="display:none">⚡ PONTOS DUPLOS (2x)! ⚡</div>
   <div class="qtext" id="hqText"></div>
   <div class="answers" id="hAnswers"></div>
   <div class="row"><button class="btn" id="endQ">Encerrar pergunta</button><button class="btn ghost small restart-btn">🔄 Reiniciar quiz</button></div>

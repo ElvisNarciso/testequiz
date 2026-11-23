@@ -93,7 +93,9 @@ $('#create').onclick = () => {
   localStorage.setItem('quiz_questions', questions);
   const timeOverride = +$('#timeOverride').value || 0;
   const shuffle = $('#shuffleOpts').checked;
-  socket.emit('host:create', { password: adminPass, questions, base: BASE, timeOverride, shuffle }, (res) => {
+  const doubleCount = Number($('#doubleCount').value);
+  const podiumPenalty = $('#podiumPenalty').checked;
+  socket.emit('host:create', { password: adminPass, questions, base: BASE, timeOverride, shuffle, doubleCount, podiumPenalty }, (res) => {
     const e = $('#setupErr');
     if (res.error) {
       if (res.error === 'Senha incorreta') {
@@ -163,6 +165,7 @@ socket.on('state', (s) => {
     case 'question':
       if (last.phase !== 'question' || last.qi !== s.q.index) {
         $('#hqNum').textContent = `Pergunta ${s.q.index + 1} / ${s.q.total}`;
+        $('#hDouble').style.display = s.q.double ? 'inline-block' : 'none';
         $('#hqText').textContent = s.q.text;
         $('#hAnswers').innerHTML = s.q.options.map((o, i) => `<div class="ans c${i}" style="cursor:default">${SHAPES[i]}<span>${esc(o)}</span></div>`).join('');
         showScreen('h-question');
@@ -219,7 +222,33 @@ function normalizeQuestionClient(q, i) {
   if (!Number.isInteger(correct) || correct < 1 || correct > options.length)
     throw new Error(`Pergunta ${i + 1} (${label}): marque a resposta correta com * no início`);
   const time = Math.min(120, Math.max(5, Number(q.time || q.tempo) || 20));
-  return { text, options, correct: correct - 1, time };
+  const dbl = Boolean(q.double || q.dobro || q.pontos === '2x' || q.points === 2);
+  return { text, options, correct: correct - 1, time, double: dbl };
+}
+function applyDoublePointsClient(list, doubleCount) {
+  const n = Number(doubleCount);
+  if (!Number.isInteger(n) || n < 0) return list;
+  const out = list.map((q) => ({ ...q }));
+  let picked = out.filter((q) => q.double).length;
+  if (picked > n) {
+    let keep = n;
+    out.forEach((q) => { if (q.double) { if (keep > 0) keep--; else q.double = false; } });
+  } else if (picked < n) {
+    const cands = out
+      .map((q, idx) => ({ q, idx }))
+      .filter((x) => !x.q.double)
+      .sort((a, b) => {
+        const qa = a.q.options.length > 2 ? 1 : 0, qb = b.q.options.length > 2 ? 1 : 0;
+        return qb !== qa ? qb - qa : b.idx - a.idx;
+      });
+    for (const c of cands) {
+      if (picked >= n) break;
+      if (c.idx === 0 && out.length > n) continue;
+      c.q.double = true; picked++;
+    }
+    for (const c of cands) { if (picked >= n) break; if (!c.q.double) { c.q.double = true; picked++; } }
+  }
+  return out;
 }
 function parseQuestionsClient(raw) {
   raw = stripCodeFence(String(raw || '').trim());
@@ -244,6 +273,7 @@ function parseQuestionsClient(raw) {
         lines.forEach((l) => {
           const t = l.match(/^(?:tempo|time)\s*:\s*(\d+)/i);
           if (t) return (q.time = Number(t[1]));
+          if (/^(?:pontos?\s*:\s*2x|dobro|2x|pontos?\s+duplos?)$/i.test(l)) return (q.double = true);
           const ansLine = l.match(/^(?:resposta\s*correta|correta|resposta)\s*:\s*(.+)$/i);
           if (ansLine) {
             const v = ansLine[1].trim();
@@ -279,16 +309,18 @@ function renderPreview() {
     let list = parseQuestionsClient($('#questions').value);
     const tOv = +$('#timeOverride').value || 0;
     if (tOv >= 5 && tOv <= 120) list = list.map((q) => ({ ...q, time: tOv }));
+    list = applyDoublePointsClient(list, $('#doubleCount').value);
     localStorage.setItem('quiz_questions', $('#questions').value);
     errEl.classList.remove('on');
     const tfCount = list.filter((q) => q.options.length === 2).length;
     const quizCount = list.length - tfCount;
+    const dblCount = list.filter((q) => q.double).length;
     box.innerHTML =
-      `<div class="pv-summary"><span>✅ ${list.length} pergunta${list.length > 1 ? 's' : ''} pronta${list.length > 1 ? 's' : ''}!</span><span>${quizCount} Quiz · ${tfCount} V/F</span></div>` +
+      `<div class="pv-summary"><span>✅ ${list.length} pergunta${list.length > 1 ? 's' : ''} pronta${list.length > 1 ? 's' : ''}!</span><span>${quizCount} Quiz · ${tfCount} V/F · ⚡ ${dblCount} em dobro</span></div>` +
       list
         .map(
           (q, idx) => `<div class="pv-card">
-            <div class="pv-head"><span>#${idx + 1} · ${q.options.length === 2 ? 'Verdadeiro / Falso' : 'Quiz'}</span><span>⏱ ${q.time}s</span></div>
+            <div class="pv-head"><span>#${idx + 1} · ${q.options.length === 2 ? 'Verdadeiro / Falso' : 'Quiz'}${q.double ? '<span class="pv-2x">⚡ 2x PONTOS DUPLOS</span>' : ''}</span><span>⏱ ${q.time}s</span></div>
             <div class="pv-q">${esc(q.text)}</div>
             <div class="pv-opts">${q.options.map((o, i) => `<div class="pv-opt c${i}${i === q.correct ? ' ok' : ''}">${SHAPES[i]}<span>${esc(o)}</span>${i === q.correct ? '<span style="margin-left:auto">✔</span>' : ''}</div>`).join('')}</div>
           </div>`
@@ -304,6 +336,7 @@ function renderPreview() {
 }
 $('#previewBtn').onclick = renderPreview;
 $('#timeOverride').onchange = () => { if ($('#previewBox').style.display !== 'none') renderPreview(); };
+$('#doubleCount').onchange = () => { if ($('#previewBox').style.display !== 'none') renderPreview(); };
 
 // ---- prompt para IA ----
 function buildPrompt() {
@@ -334,6 +367,7 @@ REGRAS OBRIGATÓRIAS:
 4. Próximas linhas: as alternativas, uma por linha (NÃO use letras A), B), C), nem traços -, nem negrito **).
 5. Marque APENAS UMA alternativa correta por pergunta colocando um asterisco * colado no início da linha (ex: *Brasília).
 6. Última linha do bloco: tempo: 20 (um número entre 10 e 30).
+7. Opcional (para até 3 perguntas mais difíceis valerem pontos em dobro): adicione uma linha extra logo abaixo do tempo escrita apenas: dobro
 ${typeRule}
 
 EXEMPLO EXATO DO FORMATO:

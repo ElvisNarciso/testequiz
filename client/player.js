@@ -167,6 +167,7 @@ function renderWatch(s) {
     case 'question':
       if (lastPhase !== 'question' || lastQ !== s.q.index) {
         $('#wqNum').textContent = `Pergunta ${s.q.index + 1} / ${s.q.total}`;
+        $('#wDouble').style.display = s.q.double ? 'inline-block' : 'none';
         $('#wqText').textContent = s.q.text;
         $('#wAnswers').innerHTML = s.q.options.map((o, i) => `<div class="ans c${i}" style="cursor:default">${SHAPES[i]}<span>${esc(o)}</span></div>`).join('');
         showScreen('w-question');
@@ -228,6 +229,7 @@ socket.on('state', (s) => {
         $('#pAnswers').querySelectorAll('.ans').forEach((b) => (b.onclick = () => { socket.emit('player:answer', +b.dataset.i); if (navigator.vibrate) navigator.vibrate(30); }));
         $('#qNum').textContent = `${s.q.index + 1} / ${s.q.total}`;
         $('#myScore').textContent = `⭐ ${me.score}`;
+        $('#pDouble').style.display = s.q.double ? 'inline-block' : 'none';
         curQ = s.q.text; applyShowQ();
         showScreen('s-question');
         runTimer(s.q.endsAt, s.q.time, $('#qBar'), null);
@@ -240,7 +242,11 @@ socket.on('state', (s) => {
       const noAnswer = !s.answered;
       $('#revTitle').textContent = r.ok ? '✔ Correto!' : noAnswer ? '⏱ Sem resposta' : '✘ Errou';
       $('#revTitle').className = 'result ' + (r.ok ? 'ok' : 'no');
-      $('#revPoints').textContent = r.ok ? `+${r.points} pontos` : '+0 pontos';
+      $('#revPoints').textContent = r.ok
+        ? `+${r.points} pontos${s.q && s.q.double ? ' ⚡ (2x!)' : ''}`
+        : r.points < 0
+        ? `${r.points} pts (penalidade do pódio)`
+        : '+0 pontos';
       $('#revAv').innerHTML = avatarSVG(me.avatar, 150);
       showScreen('s-reveal');
       if (r.ok && lastPhase !== 'reveal') confetti(50);
