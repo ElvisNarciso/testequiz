@@ -1,0 +1,90 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Quiz ao Vivo</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script>document.write('<script src="' + window.SERVER_URL + '/socket.io/socket.io.js"><\/script>')</script>
+</head>
+<body>
+
+<section class="screen on" id="s-join">
+  <h1 class="logo"><span>Quiz</span> <span>ao</span> <span>Vi</span><span>vo</span></h1>
+  <div class="card">
+    <p class="hello">👋 Bem-vindo(a)! Vamos jogar?</p>
+    <div id="pinRoom" class="pill" style="display:none;margin-bottom:10px">Sala <b id="pinShow"></b></div>
+    <input id="pin" inputmode="numeric" maxlength="6" placeholder="PIN do jogo">
+    <div style="height:10px"></div>
+    <input id="name" maxlength="14" placeholder="Qual é o seu nome?" autocomplete="off">
+    <div style="height:12px"></div>
+    <div class="err" id="joinErr"></div>
+    <button class="btn go big" id="joinBtn">Continuar ➜</button>
+  </div>
+</section>
+
+<section class="screen" id="s-dress">
+  <h2 class="logo" style="font-size:1.8rem">Escolha seu personagem</h2>
+  <div class="card"><div id="editor"></div><div style="height:12px"></div><button class="btn go big" id="dressOk">Pronto ✔</button></div>
+</section>
+
+<section class="screen" id="s-lobby">
+  <h2 class="logo" style="font-size:2.2rem">Você está dentro! 🎉</h2>
+  <div id="lobbyAv"></div>
+  <div class="bigcount" id="lobbyName"></div>
+  <div class="pill" id="lobbyCount"></div>
+  <p class="muted">Aguardando o host iniciar o jogo…</p>
+  <div class="credit big">✨ Desenvolvido por <b>Elvis Narciso</b></div>
+  <button class="btn ghost small" id="changeAv">🎭 Trocar personagem</button>
+</section>
+
+<section class="screen" id="s-question">
+  <div class="topbar"><span class="pill" id="qNum"></span><span class="pill" id="myScore"></span></div>
+  <div class="timer"><i id="qBar"></i></div>
+  <button class="btn ghost small" id="showQ">📱 Ver a pergunta no celular</button>
+  <div class="qshow" id="qShow" style="display:none"></div>
+  <div class="answers player-answers" id="pAnswers" style="flex:1;align-content:stretch"></div>
+</section>
+
+<section class="screen" id="s-wait">
+  <div class="clock" id="waitClock">⏳</div>
+  <div class="result" style="font-size:2.2rem">Resposta enviada!</div>
+  <div class="muted">Aguardando os outros jogadores…</div>
+  <div id="waitPick"></div>
+</section>
+
+<section class="screen" id="s-reveal">
+  <div class="result" id="revTitle"></div>
+  <div class="pill" id="revPoints"></div>
+  <div id="revAv"></div>
+  <div class="muted">Aguardando o host continuar…</div>
+</section>
+
+<section class="screen" id="s-ranking">
+  <h2 class="logo" style="font-size:2.2rem">🏆 Ranking</h2>
+  <div class="pill bigcount" id="myPos" style="font-size:2rem"></div>
+  <div class="rank" id="topList"></div>
+  <div class="muted">Aguardando o host continuar…</div>
+</section>
+
+<section class="screen" id="s-ended">
+  <h2 class="logo" style="font-size:2.4rem">Fim de jogo!</h2>
+  <div class="podium" id="podium"></div>
+  <div class="pill bigcount" id="finalPos" style="font-size:2rem"></div>
+  <button class="btn ghost" id="leave">Sair</button>
+</section>
+
+<section class="screen" id="s-lost">
+  <div class="card"><h2>Reconectando…</h2><p class="muted">Se demorar, recarregue a página.</p></div>
+</section>
+
+<div class="credit fixed">✨ Desenvolvido por <b>Elvis Narciso</b></div>
+<script src="avatar.js"></script>
+<script src="common.js"></script>
+<script src="player.js"></script>
+</body>
+</html>
+
+
+

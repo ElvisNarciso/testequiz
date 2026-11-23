@@ -1,0 +1,30 @@
+Qual é a capital do Brasil?
+São Paulo
+*Brasília
+Rio de Janeiro
+Salvador
+tempo: 15
+
+O Sol é uma estrela.
+*Verdadeiro
+Falso
+tempo: 10
+
+Quantos planetas existem no Sistema Solar?
+*8
+9
+7
+10
+tempo: 15
+
+A Grande Muralha da China pode ser vista a olho nu do espaço.
+Verdadeiro
+*Falso
+tempo: 12
+
+Qual animal é conhecido como o "rei da selva"?
+Tigre
+Elefante
+*Leão
+Urso
+tempo: 15

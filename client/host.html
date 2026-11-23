@@ -1,0 +1,87 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz ao Vivo — Host</title>
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script>document.write('<script src="' + window.SERVER_URL + '/socket.io/socket.io.js"><\/script>')</script>
+</head>
+<body>
+
+<section class="screen on" id="h-setup">
+  <h1 class="logo"><span>Quiz</span> <span>ao</span> <span>Vi</span><span>vo</span> <small style="font-size:1rem">host</small></h1>
+  <div class="card wide">
+    <input id="pass" type="password" placeholder="Senha de admin">
+    <div style="height:12px"></div>
+    <details class="ai-box" id="aiBox">
+      <summary>🤖 Gerar perguntas com IA (copiar prompt)</summary>
+      <p class="muted" style="margin:8px 0">Copie o prompt, cole no ChatGPT/Gemini e troque <b>[TEMA]</b> pelo assunto (ou preencha o tema aqui). Depois copie a resposta da IA e cole na caixa de perguntas abaixo.</p>
+      <div class="row"><input id="aiTheme" placeholder="Tema (opcional, ex: História do Brasil)"><input id="aiCount" type="number" min="3" max="40" value="10" style="max-width:110px" title="Quantidade de perguntas"></div>
+      <textarea id="aiPrompt" readonly></textarea>
+      <div class="row"><button class="btn small go" id="aiCopy">📋 Copiar prompt</button></div>
+    </details>    <textarea id="questions" spellcheck="false" placeholder="Cole aqui as perguntas (JSON ou TXT)…"></textarea>
+    <div class="row" style="margin-top:10px">
+      <label class="btn ghost small" style="cursor:pointer">📂 Abrir arquivo<input id="file" type="file" accept=".json,.txt" hidden></label>
+      <button class="btn small" id="miniQuiz">⚡ Carregar mini quiz (5 perguntas)</button>
+      <button class="btn ghost small" id="tplJson">Modelo JSON</button>
+      <button class="btn ghost small" id="tplTxt">Modelo TXT</button>
+      <button class="btn ghost small" id="clearQ">🧹 Limpar</button>
+    </div>
+    <div class="err" id="setupErr" style="margin-top:10px"></div>
+    <div style="height:12px"></div>
+    <button class="btn go big" id="create">Criar sala</button>
+  </div>
+</section>
+
+<section class="screen" id="h-lobby">
+  <div class="lobby-grid">
+    <div><div class="muted">Entre em <b id="joinHost"></b> com o PIN</div><div class="pin" id="pin"></div></div>
+    <div class="qr"><img id="qr" alt="QR"></div>
+  </div>
+  <div class="pill bigcount" id="pcount" style="font-size:1.6rem"></div>
+  <div class="players" id="plist"></div>
+  <button class="btn go big" id="start" disabled>▶ Iniciar jogo</button>
+  <div class="muted">Ao iniciar, a sala fecha para novos jogadores.</div>
+  <div class="credit big">✨ Desenvolvido por <b>Elvis Narciso</b></div>
+  <button class="btn ghost small" id="newGame2">← Cancelar e criar outra sala</button>
+</section>
+
+<section class="screen" id="h-question">
+  <div class="topbar"><span class="pill" id="hqNum"></span><span class="pill">✋ <b id="hAnswered">0</b> / <span id="hTotal">0</span> responderam</span><div class="clock" id="hClock"></div></div>
+  <div class="timer"><i id="hBar"></i></div>
+  <div class="qtext" id="hqText"></div>
+  <div class="answers" id="hAnswers"></div>
+  <button class="btn" id="endQ">Encerrar pergunta</button>
+</section>
+
+<section class="screen" id="h-reveal">
+  <div class="qtext" id="rText" style="font-size:1.6rem"></div>
+  <div class="bars" id="rBars"></div>
+  <div class="answers" id="rAnswers"></div>
+  <button class="btn go big" id="toRank">Continuar ▶</button>
+</section>
+
+<section class="screen" id="h-ranking">
+  <h2 class="logo" style="font-size:3rem">🏆 Ranking</h2>
+  <div class="rank" id="hTop"></div>
+  <button class="btn go big" id="nextQ">Continuar ▶</button>
+</section>
+
+<section class="screen" id="h-ended">
+  <h2 class="logo" style="font-size:3rem">🎉 Pódio final</h2>
+  <div class="podium" id="hPodium"></div>
+  <div class="rank" id="hAll"></div>
+  <div class="row"><button class="btn" id="csv">⬇ Baixar resultado</button><button class="btn ghost" id="newGame">Nova sala</button></div>
+</section>
+
+<div class="credit fixed">✨ Desenvolvido por <b>Elvis Narciso</b></div>
+<script src="avatar.js"></script>
+<script src="common.js"></script>
+<script src="host.js"></script>
+</body>
+</html>
+
+
+
