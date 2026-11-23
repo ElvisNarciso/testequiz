@@ -1,8 +1,11 @@
 const socket = io(window.SERVER_URL || undefined, { transports: ['websocket', 'polling'] });
 const KEY = 'quiz_session';
+const BASE = location.origin + location.pathname;
 let saved = JSON.parse(localStorage.getItem(KEY) || 'null');
 let avatar = (saved && saved.avatar) || randomAvatar();
-let joined = false, lastPhase = null, lastQ = -1, choosing = false, showQuestion = localStorage.getItem('quiz_showq') !== '0', curQ = null;
+let joined = false, watching = false, watchPin = sessionStorage.getItem('quiz_watch') || '', livePin = '';
+let lastPhase = null, lastQ = -1, choosing = false, showQuestion = localStorage.getItem('quiz_showq') !== '0', curQ = null;
+$('#wJoinHost').textContent = location.host + location.pathname;
 
 const qs = new URLSearchParams(location.search);
 let urlPin = qs.get('pin') || '';
@@ -16,8 +19,11 @@ $('#name').value = (saved && saved.name) || '';
 
 function unlinkToJoin(msg, clearPin = true) {
   localStorage.removeItem(KEY);
+  sessionStorage.removeItem('quiz_watch');
   saved = null;
   joined = false;
+  watching = false;
+  watchPin = '';
   choosing = false;
   lastPhase = null;
   lastQ = -1;
@@ -80,8 +86,53 @@ $('#leave').onclick = () => unlinkToJoin('', true);
 
 // Ao conectar: se havia sessão salva (mesma sala ou sem ?pin= novo), verifica e volta;
 // se veio só ?pin= na URL, verifica se a sala ainda está aberta.
+// ---- modo assistir ao vivo (sem controle) ----
+function startWatch(pin, silent = false) {
+  socket.emit('watch:join', { pin: pin || livePin || '', base: BASE }, (res) => {
+    if (!res || res.error) {
+      sessionStorage.removeItem('quiz_watch');
+      watching = false;
+      watchPin = '';
+      if (!silent) toast((res && res.error) || 'Nenhuma sala ao vivo');
+      else showScreen('s-join');
+      return;
+    }
+    watching = true;
+    watchPin = res.pin;
+    sessionStorage.setItem('quiz_watch', res.pin);
+    $('#wPin').textContent = res.pin;
+    $('#wQr').src = res.qr;
+  });
+}
+function exitWatch() {
+  sessionStorage.removeItem('quiz_watch');
+  watching = false;
+  watchPin = '';
+  lastPhase = null;
+  lastQ = -1;
+  stopCelebrate();
+  if (socket.connected) socket.emit('watch:leave');
+  showScreen('s-join');
+}
+$('#watchLive').onclick = () => startWatch(livePin, false);
+document.querySelectorAll('.w-exit').forEach((b) => (b.onclick = exitWatch));
+
+socket.on('live:status', (info) => {
+  if (info && info.live) {
+    livePin = info.pin;
+    $('#watchLive').disabled = false;
+    $('#liveLabel').textContent = `Assistir ao vivo • Sala ${info.pin}`;
+  } else {
+    livePin = '';
+    $('#watchLive').disabled = true;
+    $('#liveLabel').textContent = 'Assistir ao vivo (aguardando host)';
+  }
+});
+
 socket.on('connect', () => {
-  if (saved && (!urlPin || urlPin === saved.pin)) {
+  if (watchPin) {
+    startWatch(watchPin, true);
+  } else if (saved && (!urlPin || urlPin === saved.pin)) {
     join(true);
   } else if (urlPin) {
     socket.emit('room:check', { pin: urlPin, token: null }, (res) => {
@@ -91,11 +142,66 @@ socket.on('connect', () => {
     });
   }
 });
-socket.on('disconnect', () => { if (joined) showScreen('s-lost'); });
-socket.on('room:closed', () => unlinkToJoin('A sala foi fechada pelo host. Digite um novo PIN.', true));
+socket.on('disconnect', () => { if (joined || watching) showScreen('s-lost'); });
+socket.on('room:closed', () => {
+  sessionStorage.removeItem('quiz_watch');
+  watching = false;
+  watchPin = '';
+  stopCelebrate();
+  unlinkToJoin('A sala foi fechada pelo host.', true);
+});
 socket.on('kicked', () => unlinkToJoin('Você foi removido da sala.', true));
+socket.on('progress', (p) => { if (watching) $('#wAnswered').textContent = p.answered; });
+
+function renderWatch(s) {
+  syncClock(s.now);
+  if (s.phase !== 'ended') stopCelebrate();
+  const connected = s.players.filter((p) => p.connected).length;
+  switch (s.phase) {
+    case 'lobby':
+      lastQ = -1;
+      $('#wPcount').textContent = `👥 ${s.players.length} jogador${s.players.length === 1 ? '' : 'es'}`;
+      $('#wPlist').innerHTML = s.players.map((p) => `<div class="player${p.connected ? '' : ' off'}">${avatarSVG(p.avatar, 70)}${esc(p.name)}</div>`).join('');
+      showScreen('w-lobby');
+      break;
+    case 'question':
+      if (lastPhase !== 'question' || lastQ !== s.q.index) {
+        $('#wqNum').textContent = `Pergunta ${s.q.index + 1} / ${s.q.total}`;
+        $('#wqText').textContent = s.q.text;
+        $('#wAnswers').innerHTML = s.q.options.map((o, i) => `<div class="ans c${i}" style="cursor:default">${SHAPES[i]}<span>${esc(o)}</span></div>`).join('');
+        showScreen('w-question');
+        runTimer(s.q.endsAt, s.q.time, $('#wBar'), $('#wClock'));
+      }
+      $('#wAnswered').textContent = s.answered;
+      $('#wTotal').textContent = connected;
+      lastQ = s.q.index;
+      break;
+    case 'reveal': {
+      $('#wrText').textContent = s.q.text;
+      const max = Math.max(1, ...s.counts);
+      $('#wrBars').style.gridTemplateColumns = `repeat(${s.q.options.length}, 1fr)`;
+      $('#wrBars').innerHTML = s.q.options.map((o, i) => `<div class="bar c${i}${i === s.q.correct ? '' : ' dim'}">${s.counts[i]}<div class="col" style="height:0" data-h="${(s.counts[i] / max) * 200 + 10}"></div>${SHAPES[i]}</div>`).join('');
+      requestAnimationFrame(() => setTimeout(() => $('#wrBars').querySelectorAll('.col').forEach((c) => (c.style.height = c.dataset.h + 'px')), 50));
+      $('#wrAnswers').innerHTML = s.q.options.map((o, i) => `<div class="ans c${i}${i === s.q.correct ? ' correct' : ' dim'}" style="cursor:default;min-height:70px">${SHAPES[i]}<span>${esc(o)}</span>${i === s.q.correct ? '<span class="n">✔</span>' : ''}</div>`).join('');
+      showScreen('w-reveal');
+      break;
+    }
+    case 'ranking':
+      $('#wTop').innerHTML = rankRows(s.top);
+      showScreen('w-ranking');
+      break;
+    case 'ended':
+      if (lastPhase !== 'ended') $('#wPodium').innerHTML = podiumHTML(s.players.slice(0, 3), 130);
+      $('#wAll').innerHTML = rankRows(s.players.slice(3));
+      showScreen('w-ended');
+      if (lastPhase !== 'ended') celebrate();
+      break;
+  }
+  lastPhase = s.phase;
+}
 
 socket.on('state', (s) => {
+  if (s.role === 'watch') return renderWatch(s);
   syncClock(s.now);
   if (s.phase !== 'ended') stopCelebrate();
   const me = s.me;

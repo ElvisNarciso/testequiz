@@ -28,6 +28,10 @@
     <div class="err" id="joinErr"></div>
     <button class="btn go big" id="joinBtn">Continuar ➜</button>
   </div>
+  <button class="btn live-btn" id="watchLive" disabled>
+    <span class="live-dot"></span>
+    <span id="liveLabel">Assistir ao vivo (aguardando host)</span>
+  </button>
 </section>
 
 <section class="screen" id="s-dress">
@@ -90,6 +94,48 @@
     <p class="muted">Se demorar ou a sala tiver fechado, você pode sair e digitar outro PIN.</p>
     <button class="btn ghost small" id="leaveLost">🔓 Desvincular e digitar outro PIN</button>
   </div>
+</section>
+
+<!-- Modo Assistir ao Vivo (telão / acompanhamento sem controle) -->
+<section class="screen" id="w-lobby">
+  <div class="pill live-badge"><span class="live-dot on"></span> AO VIVO</div>
+  <div class="lobby-grid">
+    <div><div class="muted">Entre em <b id="wJoinHost"></b> com o PIN</div><div class="pin" id="wPin"></div></div>
+    <div class="qr"><img id="wQr" alt="QR"></div>
+  </div>
+  <div class="pill bigcount" id="wPcount" style="font-size:1.6rem"></div>
+  <div class="players" id="wPlist"></div>
+  <p class="muted">Aguardando o host iniciar o jogo…</p>
+  <div class="credit big">✨ Desenvolvido por <b>Elvis Narciso</b></div>
+  <button class="btn ghost small w-exit">← Sair do ao vivo</button>
+</section>
+
+<section class="screen" id="w-question">
+  <div class="topbar"><span class="pill" id="wqNum"></span><span class="pill">✋ <b id="wAnswered">0</b> / <span id="wTotal">0</span> responderam</span><div class="clock" id="wClock"></div></div>
+  <div class="timer"><i id="wBar"></i></div>
+  <div class="qtext" id="wqText"></div>
+  <div class="answers" id="wAnswers"></div>
+  <button class="btn ghost small w-exit">← Sair do ao vivo</button>
+</section>
+
+<section class="screen" id="w-reveal">
+  <div class="qtext" id="wrText" style="font-size:1.6rem"></div>
+  <div class="bars" id="wrBars"></div>
+  <div class="answers" id="wrAnswers"></div>
+  <p class="muted">Aguardando o host continuar…</p>
+</section>
+
+<section class="screen" id="w-ranking">
+  <h2 class="logo" style="font-size:3rem">🏆 Ranking</h2>
+  <div class="rank" id="wTop"></div>
+  <p class="muted">Aguardando o host continuar…</p>
+</section>
+
+<section class="screen" id="w-ended">
+  <h2 class="logo" style="font-size:3rem">🎉 Pódio final</h2>
+  <div class="podium" id="wPodium"></div>
+  <div class="rank" id="wAll"></div>
+  <button class="btn ghost w-exit">← Sair do ao vivo</button>
 </section>
 
 <div class="credit fixed">✨ Desenvolvido por <b>Elvis Narciso</b></div>

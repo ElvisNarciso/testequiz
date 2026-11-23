@@ -184,14 +184,23 @@ function playerView(room, p) {
   };
 }
 
+function liveInfo() {
+  const room = [...rooms.values()].at(-1);
+  if (!room) return { live: false };
+  return { live: true, pin: room.pin, phase: room.phase, count: room.players.size };
+}
+
 function emitRoom(room) {
   if (!rooms.has(room.pin)) return;
-  io.to('host:' + room.pin).emit('state', hostView(room));
+  const hv = hostView(room);
+  io.to('host:' + room.pin).emit('state', hv);
+  io.to('watch:' + room.pin).emit('state', { ...hv, role: 'watch' });
   room.players.forEach((p) => io.to('p:' + room.pin + ':' + p.id).emit('state', playerView(room, p)));
+  io.emit('live:status', liveInfo());
 }
 
 function emitProgress(room) {
-  io.to('host:' + room.pin).emit('progress', { answered: room.answers.size, counts: counts(room) });
+  io.to('host:' + room.pin).to('watch:' + room.pin).emit('progress', { answered: room.answers.size, counts: counts(room) });
 }
 
 function startQuestion(room) {
@@ -239,6 +248,26 @@ const cleanAvatar = (a) => {
 // ---------- sockets ----------
 io.on('connection', (socket) => {
   let ctx = null; // { room, role, pid }
+  socket.emit('live:status', liveInfo());
+
+  socket.on('watch:join', async ({ pin, base } = {}, cb) => {
+    if (typeof cb !== 'function') return;
+    const room = pin ? rooms.get(String(pin).trim()) : [...rooms.values()].at(-1);
+    if (!room) return cb({ error: 'Nenhuma sala ao vivo no momento.' });
+    socket.join('watch:' + room.pin);
+    ctx = { room, role: 'watch' };
+    const joinUrl = `${fixBase(base)}?pin=${room.pin}`;
+    cb({ ok: true, pin: room.pin, joinUrl, qr: await QRCode.toDataURL(joinUrl, { margin: 1, width: 360 }) });
+    socket.emit('state', { ...hostView(room), role: 'watch' });
+  });
+
+  socket.on('watch:leave', (cb) => {
+    if (ctx?.role === 'watch') {
+      socket.leave('watch:' + ctx.room.pin);
+      ctx = null;
+    }
+    if (typeof cb === 'function') cb();
+  });
 
   socket.on('room:check', ({ pin, token } = {}, cb) => {
     if (typeof cb !== 'function') return;
@@ -307,7 +336,9 @@ io.on('connection', (socket) => {
       clearTimeout(room.timer);
       rooms.delete(room.pin);
       room.players.forEach((_, id) => io.to('p:' + room.pin + ':' + id).emit('room:closed'));
+      io.to('watch:' + room.pin).emit('room:closed');
       ctx = null;
+      io.emit('live:status', liveInfo());
     }
     if (typeof cb === 'function') cb();
   });
