@@ -166,7 +166,8 @@ function renderWatch(s) {
       break;
     case 'question':
       if (lastPhase !== 'question' || lastQ !== s.q.index) {
-        $('#wqNum').textContent = `Pergunta ${s.q.index + 1} / ${s.q.total}`;
+        const finalTag = s.q.total > 2 && s.q.index >= s.q.total - 2 ? ' · 🔥 Reta final!' : '';
+        $('#wqNum').textContent = `Pergunta ${s.q.index + 1} / ${s.q.total}${finalTag}`;
         $('#wDouble').style.display = s.q.double ? 'inline-block' : 'none';
         $('#wqText').textContent = s.q.text;
         $('#wAnswers').innerHTML = s.q.options.map((o, i) => `<div class="ans c${i}" style="cursor:default">${SHAPES[i]}<span>${esc(o)}</span></div>`).join('');
@@ -188,7 +189,7 @@ function renderWatch(s) {
       break;
     }
     case 'ranking':
-      $('#wTop').innerHTML = rankRows(s.top);
+      $('#wTop').innerHTML = s.suspense ? suspenseHTML(s.remaining) : rankRows(s.top);
       showScreen('w-ranking');
       break;
     case 'ended':
@@ -227,7 +228,8 @@ socket.on('state', (s) => {
       if (lastPhase !== 'question' || lastQ !== s.q.index || !$('#s-question').classList.contains('on')) {
         $('#pAnswers').innerHTML = s.q.options.map((o, i) => `<button class="ans c${i}" data-i="${i}">${SHAPES[i]}<span>${esc(o)}</span></button>`).join('');
         $('#pAnswers').querySelectorAll('.ans').forEach((b) => (b.onclick = () => { socket.emit('player:answer', +b.dataset.i); if (navigator.vibrate) navigator.vibrate(30); }));
-        $('#qNum').textContent = `${s.q.index + 1} / ${s.q.total}`;
+        const finalTag = s.q.total > 2 && s.q.index >= s.q.total - 2 ? ' 🔥' : '';
+        $('#qNum').textContent = `${s.q.index + 1} / ${s.q.total}${finalTag}`;
         $('#myScore').textContent = `⭐ ${me.score}`;
         $('#pDouble').style.display = s.q.double ? 'inline-block' : 'none';
         curQ = s.q.text; applyShowQ();
@@ -253,8 +255,10 @@ socket.on('state', (s) => {
       break;
     }
     case 'ranking':
-      $('#myPos').textContent = `Você: ${me.rank}º lugar • ${me.score} pts`;
-      $('#topList').innerHTML = rankRows(s.top, me.id);
+      $('#myPos').textContent = s.suspense
+        ? '🤫 Colocação em segredo até o pódio!'
+        : `Você: ${me.rank}º lugar • ${me.score} pts`;
+      $('#topList').innerHTML = s.suspense ? suspenseHTML(s.remaining) : rankRows(s.top, me.id);
       showScreen('s-ranking');
       break;
     case 'ended':

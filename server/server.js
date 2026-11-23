@@ -181,6 +181,7 @@ function counts(room) {
 
 function hostView(room) {
   const revealed = room.phase === 'reveal' || room.phase === 'ranking' || room.phase === 'ended';
+  const suspense = room.questions.length > 2 && room.qIndex >= room.questions.length - 2;
   return {
     role: 'host',
     now: Date.now(),
@@ -190,7 +191,9 @@ function hostView(room) {
     q: questionView(room, revealed),
     answered: room.answers.size,
     counts: counts(room),
-    top: ranking(room).slice(0, 5),
+    top: room.phase === 'ranking' && suspense ? [] : ranking(room).slice(0, 5),
+    suspense,
+    remaining: Math.max(0, room.questions.length - 1 - room.qIndex),
     totalQuestions: room.questions.length,
     lastQuestion: room.qIndex >= room.questions.length - 1,
   };
@@ -202,18 +205,22 @@ function playerView(room, p) {
   const a = room.answers.get(p.id);
   const q = room.questions[room.qIndex];
   const revealed = room.phase === 'reveal' || room.phase === 'ranking';
+  const suspense = room.questions.length > 2 && room.qIndex >= room.questions.length - 2;
+  const hideRank = room.phase === 'ranking' && suspense;
   return {
     role: 'player',
     now: Date.now(),
     phase: room.phase,
     pin: room.pin,
-    me: { ...pub(p), rank: me.rank },
+    me: { ...pub(p), rank: hideRank ? null : me.rank },
     count: room.players.size,
     q: questionView(room, false),
     answered: !!a,
     picked: a ? a.choice : null,
     result: revealed && q ? { correct: q.correct, ok: !!a && a.choice === q.correct, points: a ? a.points : 0 } : null,
-    top: rk.slice(0, 5),
+    top: hideRank ? [] : rk.slice(0, 5),
+    suspense,
+    remaining: Math.max(0, room.questions.length - 1 - room.qIndex),
     nextRank: rk[me.rank - 2] ? rk[me.rank - 2] : null,
     podium: room.phase === 'ended' ? rk.slice(0, 3) : null,
   };

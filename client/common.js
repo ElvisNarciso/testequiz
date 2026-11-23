@@ -51,6 +51,14 @@ function rankRows(list, meId) {
     .map((p, i) => `<div class="rk${p.id === meId ? ' me' : ''}" style="animation-delay:${i * 0.12}s"><span class="pos">${p.rank || i + 1}º</span>${avatarSVG(p.avatar, 46)}<span class="nm">${esc(p.name)}</span><span>${p.score}</span></div>`)
     .join('');
 }
+function suspenseHTML(remaining) {
+  const last = remaining === 0;
+  return `<div class="suspense-card">
+    <div class="suspense-icon">${last ? '🥁' : '🔮'}</div>
+    <div class="suspense-title">${last ? 'Fim das perguntas! Preparando o Pódio…' : 'Reta Final! Ranking em suspense!'}</div>
+    <p class="suspense-sub">${last ? 'Pontuação fechada! Tudo pode ter mudado na última pergunta — quem levou o 1º lugar?' : 'Falta só 1 pergunta e o pódio está muito próximo! Segure a ansiedade…'}</p>
+  </div>`;
+}
 
 // ---- pódio animado ----
 function podiumHTML(top, size = 100) {

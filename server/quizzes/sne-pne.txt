@@ -49,7 +49,6 @@ Somente de infraestrutura física dos prédios escolares
 *Sociais, étnico-raciais, de gênero, relativas à diversidade sexual e a pessoas com deficiência
 Exclusivamente ligadas ao acesso à internet nas escolas
 tempo: 15
-dobro
 
 Em que ano ocorreu o Manifesto dos Pioneiros, defendendo um sistema nacional articulado contra reformas parciais?
 *1932
@@ -123,6 +122,7 @@ Responsabilização articulada ao SNE se confunde com "responsabilização basea
 Verdadeiro
 *Falso
 tempo: 15
+dobro
 
 Quais são os pilares destacados no slide sobre SNE: Responsabilidade e Democracia?
 Autoritarismo centralizador, punição por metas e fim da autonomia local

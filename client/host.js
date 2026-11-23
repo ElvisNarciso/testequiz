@@ -164,7 +164,8 @@ socket.on('state', (s) => {
       break;
     case 'question':
       if (last.phase !== 'question' || last.qi !== s.q.index) {
-        $('#hqNum').textContent = `Pergunta ${s.q.index + 1} / ${s.q.total}`;
+        const finalTag = s.q.total > 2 && s.q.index >= s.q.total - 2 ? ' · 🔥 Reta final!' : '';
+        $('#hqNum').textContent = `Pergunta ${s.q.index + 1} / ${s.q.total}${finalTag}`;
         $('#hDouble').style.display = s.q.double ? 'inline-block' : 'none';
         $('#hqText').textContent = s.q.text;
         $('#hAnswers').innerHTML = s.q.options.map((o, i) => `<div class="ans c${i}" style="cursor:default">${SHAPES[i]}<span>${esc(o)}</span></div>`).join('');
@@ -185,8 +186,8 @@ socket.on('state', (s) => {
       break;
     }
     case 'ranking':
-      $('#hTop').innerHTML = rankRows(s.top);
-      $('#nextQ').textContent = s.lastQuestion ? 'Ver pódio final 🏁' : 'Continuar ▶';
+      $('#hTop').innerHTML = s.suspense ? suspenseHTML(s.remaining) : rankRows(s.top);
+      $('#nextQ').textContent = s.lastQuestion ? 'Revelar pódio final 🏆' : s.suspense ? 'Ir para a última pergunta 🔥' : 'Continuar ▶';
       showScreen('h-ranking');
       break;
     case 'ended': {
