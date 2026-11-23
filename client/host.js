@@ -1,14 +1,14 @@
 const socket = io(window.SERVER_URL || undefined, { transports: ['websocket', 'polling'] });
 const HK = 'quiz_host';
 // Base para o link de entrada dos jogadores (a página index.html do mesmo site)
-const BASE = location.origin + location.pathname.replace(/host\.html$/, '');
+const BASE = location.origin + location.pathname.replace(/host(\.html)?$/, '');
 let hs = JSON.parse(localStorage.getItem(HK) || 'null');
 let last = { phase: null, qi: -1 };
 let current = null;
 
 $('#pass').value = localStorage.getItem('quiz_pass') || '';
 $('#questions').value = localStorage.getItem('quiz_questions') || '';
-$('#joinHost').textContent = location.host + location.pathname.replace(/host\.html$/, '');
+$('#joinHost').textContent = location.host + location.pathname.replace(/host(\.html)?$/, '');
 
 const TPL_JSON = JSON.stringify([
   { q: 'Qual é a capital do Brasil?', options: ['São Paulo', 'Brasília', 'Rio de Janeiro', 'Salvador'], correct: 2, time: 20 },

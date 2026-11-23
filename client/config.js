@@ -1,3 +1,3 @@
-// URL do servidor. Vazio = mesmo endereço do site (teste local).
-// No Netlify, coloque aqui a URL do Render, ex: 'https://meu-quiz.onrender.com'
-window.SERVER_URL = '';
+// URL do servidor no Render.
+// Para testar só local sem Render, deixe vazio: ''
+window.SERVER_URL = 'https://testequiz.onrender.com';
