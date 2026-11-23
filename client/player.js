@@ -1,4 +1,4 @@
-﻿const socket = io(window.SERVER_URL || undefined, { transports: ['websocket', 'polling'] });
+const socket = io(window.SERVER_URL || undefined, { transports: ['websocket', 'polling'] });
 const KEY = 'quiz_session';
 let saved = JSON.parse(localStorage.getItem(KEY) || 'null');
 let avatar = (saved && saved.avatar) || randomAvatar();

@@ -1,4 +1,4 @@
-﻿// Servidor do Quiz ao Vivo (Express + Socket.IO). Estado em memória.
+// Servidor do Quiz ao Vivo (Express + Socket.IO). Estado em memória.
 const path = require('path');
 const http = require('http');
 const express = require('express');

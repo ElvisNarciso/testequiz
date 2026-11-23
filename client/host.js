@@ -1,4 +1,4 @@
-﻿const socket = io(window.SERVER_URL || undefined, { transports: ['websocket', 'polling'] });
+const socket = io(window.SERVER_URL || undefined, { transports: ['websocket', 'polling'] });
 const HK = 'quiz_host';
 // Base para o link de entrada dos jogadores (a página index.html do mesmo site)
 const BASE = location.origin + location.pathname.replace(/host\.html$/, '');
